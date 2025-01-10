@@ -1,0 +1,84 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Fri Jan 10 23:25:01 2025
+[*]
+[dumpfile] "darksocv.vcd"
+[dumpfile_mtime] "Thu Jan  9 21:49:55 2025"
+[dumpfile_size] 67781365
+[savefile] "bram.gtkw"
+[timestart] 3573620
+[size] 2538 1323
+[pos] -1 -1
+*-13.717345 3655000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] darksimv.
+[treeopen] darksimv.soc0.
+[treeopen] darksimv.soc0.bridge0.
+[treeopen] darksimv.soc0.io0.
+[sst_width] 276
+[signals_width] 118
+[sst_expanded] 1
+[sst_vpaned_height] 409
+@28
+darksimv.soc0.bram0.CLK
+darksimv.soc0.bram0.RES
+darksimv.soc0.bram0.HLT
+@200
+-
+@28
+darksimv.soc0.bram0.IDREQ
+@22
+darksimv.soc0.bram0.IADDR[31:0]
+darksimv.soc0.bram0.IDATA[31:0]
+@28
+darksimv.soc0.bram0.IDACK
+@200
+-
+@28
+darksimv.soc0.bram0.XDREQ
+darksimv.soc0.bram0.XRD
+darksimv.soc0.bram0.XWR
+@22
+darksimv.soc0.bram0.XBE[3:0]
+darksimv.soc0.bram0.XADDR[31:0]
+darksimv.soc0.bram0.XATAI[31:0]
+darksimv.soc0.bram0.XATAO[31:0]
+@28
+darksimv.soc0.bram0.XDACK
+@200
+-
+@22
+darksimv.soc0.bram0.DEBUG[3:0]
+@200
+-
+@22
+darksimv.soc0.bram0.DTACK[3:0]
+darksimv.soc0.bram0.ITACK[3:0]
+darksimv.soc0.bram0.RAMFF[31:0]
+darksimv.soc0.bram0.ROMFF[31:0]
+@420
+darksimv.soc0.bram0.i
+@200
+-
+@28
+darksimv.soc0.io0.uart0.RD
+darksimv.soc0.io0.uart0.WR
+darksimv.soc0.io0.uart0.RXD
+darksimv.soc0.io0.uart0.TXD
+@200
+-
+@c00022
+darksimv.soc0.io0.DEBUG[3:0]
+@28
+(0)darksimv.soc0.io0.DEBUG[3:0]
+(1)darksimv.soc0.io0.DEBUG[3:0]
+(2)darksimv.soc0.io0.DEBUG[3:0]
+(3)darksimv.soc0.io0.DEBUG[3:0]
+@1401200
+-group_end
+@22
+darksimv.soc0.io0.XATAI[31:0]
+darksimv.soc0.io0.UDATA[31:0]
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0
