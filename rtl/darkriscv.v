@@ -370,8 +370,8 @@ module darkriscv
     `endif
                                                  0;	 // unknown
 
-    wire [31:0] WRDATA = FCT3[1:0]==3 ? (CRDATA & ~CRMASK) : FCT3[1:0]==2 ? (CRDATA | CRMASK) : CRMASK;
     wire [31:0] CRMASK = FCT3[2] ? XIDATA[19:15] : U1REG;
+    wire [31:0] WRDATA = FCT3[1:0]==3 ? (CRDATA & ~CRMASK) : FCT3[1:0]==2 ? (CRDATA | CRMASK) : CRMASK;
    
 `endif
 

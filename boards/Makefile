@@ -33,6 +33,7 @@
 #BOARD  = qmtech_sdram_lx16
 #BOARD = lattice_brevia2_xp2
 #BOARD = papilio_duo_logicstart
+#BOARD = papilio_one_500k
 
 default: all
 
