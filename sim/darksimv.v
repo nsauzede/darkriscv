@@ -66,6 +66,7 @@ module darksimv;
 
     wire TX;
     wire RX = 1;
+    wire [7:0]  UARTQ;     // UART OUT
 
 `ifdef __SDRAM__
 
@@ -94,6 +95,7 @@ module darksimv;
         .S_DQM(S_DQM),
         .S_DB (S_DB),
 `endif        
+        .UARTQ(UARTQ),
         .UART_RXD(RX),
         .UART_TXD(TX)
     );

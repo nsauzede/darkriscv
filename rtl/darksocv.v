@@ -38,6 +38,9 @@ module darksocv
 
     input        UART_RXD,  // UART receive line
     output       UART_TXD,  // UART transmit line
+`ifdef SIMULATION
+    output [7:0] UARTQ,     // UART OUT
+`endif
 
 `ifdef __SDRAM__
 
@@ -232,6 +235,9 @@ module darksocv
         
         .RXD    (UART_RXD),
         .TXD    (UART_TXD),
+`ifdef SIMULATION
+        .UARTQ  (UARTQ),
+`endif
 
         .LED    (LED),
 

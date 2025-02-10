@@ -49,6 +49,9 @@ module darkio
 
     input         RXD,  // UART receive line
     output        TXD,  // UART transmit line
+`ifdef SIMULATION
+    output [7:0]  UARTQ,     // UART OUT
+`endif
 
 `ifdef SIMULATION
     output        ESIMREQ,
@@ -87,6 +90,19 @@ module darkio
 
     reg [1:0] DTACK  = 0;
 
+`ifdef SIMULATION
+    reg [7:0] UARTQX = 0;
+    reg [7:0] UARTQXX = 0;
+    reg XWRX = 0;
+    assign UARTQ = UARTQXX;
+    always@(posedge CLK)
+    begin
+        XWRX <= XWR;
+        if (XWR && !XWRX) UARTQXX <= 0;
+        else UARTQXX <= UARTQX;
+    end
+`endif
+
     always@(posedge CLK)
     begin
         DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XDREQ && XRD) ? 1 : 0; // wait-states
@@ -97,6 +113,11 @@ module darkio
             TIMERFF <= (`BOARD_CK/1000)-1; // timer set to 1kHz by default
         end
         else
+`ifdef SIMULATION
+        if (!HLT && XDREQ && XWR && XADDR[4:2]==1) begin
+            UARTQX <= XATAI[15:8];
+        end
+`endif
         if(XDREQ && XWR)
         begin
             case(XADDR[4:0])
