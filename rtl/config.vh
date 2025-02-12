@@ -433,6 +433,26 @@
     `define INVRES 1    
     `define __SDRAM__ 1
 `endif
+/*
+`ifdef DIGILENT_SPARTAN3_S200
+    `define BOARD_ID 7
+    `define BOARD_CK 50000000
+    `define __RMW_CYCLE__
+`endif
+`ifdef PAPILIO_DUO_LOGICSTART
+    `define BOARD_ID 11
+    `define BOARD_CK_REF 32000000
+    `define BOARD_CK_MUL 2
+    `define BOARD_CK_DIV 2
+    `define XILINX6CLK 1
+`endif
+*/
+`ifdef PAPILIO_ONE_500K
+    `define BOARD_ID 19
+    `define BOARD_CK 32000000
+//    `define __TESTMODE__ 1
+    `define __RMW_CYCLE__ 1
+`endif
 
 `ifndef BOARD_ID
     `define BOARD_ID 0

@@ -95,8 +95,10 @@ module darkio
         begin
             IACK <= 0;
             TIMERFF <= (`BOARD_CK/1000)-1; // timer set to 1kHz by default
+            LEDFF <= 4'b0101;
         end
         else
+            LEDFF <= 4'b1010;
         if(XDREQ && XWR)
         begin
             case(XADDR[4:0])
@@ -158,6 +160,7 @@ module darkio
     
 `ifndef __TESTMODE__
     assign LED = LEDFF[3:0];
+//    assign LED = 4'b1010;
 `endif
 
     // darkuart

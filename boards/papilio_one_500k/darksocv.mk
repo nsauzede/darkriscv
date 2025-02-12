@@ -39,17 +39,9 @@
 # enable/disable the different options.
 # 
 
-# board Avnet Microboard LX9
-BOARD  = papilio_duo_logicstart
-DEVICE = xc6slx9-3tqg144
-
-# board Xilinx AC701 A200
-#BOARD  = xilinx_ac701_a200
-#DEVICE = xc7a200t-fbg676-2
-
-# board QMTech SDRAM LX16
-#BOARD  = qmtech_sdram_lx16
-#DEVICE = xc6slx16-ftg256-2
+# board Digilent Spartan-3 S200
+BOARD  = papilio_one_500k
+DEVICE = xc3s500e-4-vq100
 
 ISE = ../boards/$(BOARD)
 RTL = ../rtl
@@ -71,7 +63,7 @@ MAP = $(TMP)/darksocv_map.ncd
 UT  = $(ISE)/darksocv.ut
 
 PRJS = $(ISE)/darksocv.prj
-RTLS = $(RTL)/darksocv.v $(RTL)/darkriscv.v $(RTL)/darkuart.v $(RTL)/darkpll.v $(RTL)/config.vh
+RTLS = $(RTL)/darkriscv.v $(RTL)/darksocv.v $(RTL)/darkuart.v $(RTL)/darkpll.v $(RTL)/darkbridge.v $(RTL)/darkram.v $(RTL)/darkio.v $(RTL)/config.vh
 
 ifdef HARVARD
 	BOOT = $(SRC)/darksocv.rom.mem $(SRC)/darksocv.ram.mem
@@ -90,11 +82,13 @@ $(NGD): $(NGC) $(UCF) $(BOOT) $(RTLS)
 	cd $(TMP) && ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc $(UCF) -p $(DEVICE) $(NGC) $(NGD)
 
 $(PCF): $(NGD) $(BOOT) $(UCF) $(RTLS)
-	cd $(TMP) && map -intstyle ise -p $(DEVICE) -w -logic_opt on -ol high -t 1 -xt 0 -register_duplication on -r 4 -global_opt off -mt 2 -detail -ir off -ignore_keep_hierarchy -pr off -lc auto -power off -o $(MAP) $(NGD) $(PCF)
+	cd $(TMP) && map -intstyle ise -p $(DEVICE) -w -logic_opt on -ol high -t 1 -register_duplication on -r 4 -global_opt off -detail -ir off -ignore_keep_hierarchy -pr off -power off -o $(MAP) $(NGD) $(PCF)
 
 $(NCD): $(PCF) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && par -w -intstyle ise -ol high -mt 2 $(MAP) $(NCD) $(PCF)
-	cd $(TMP) && trce -intstyle ise -v 3 -s 2 -n 3 -fastpaths -xml $(TWX) $(NCD) -o $(TWR) $(PCF)
+
+$(TWR): $(PCF) $(BOOT) $(UCF) $(RTLS) $(NCD)
+	cd $(TMP) && trce -intstyle ise -v 3 -s 4 -n 3 -fastpaths -xml $(TWX) $(NCD) -o $(TWR) $(PCF)
 
 $(BIT): $(UT) $(NCD) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && bitgen -intstyle ise -f $(UT) $(NCD)

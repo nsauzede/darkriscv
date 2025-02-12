@@ -1,0 +1,28 @@
+# Papilio One 2.03 and higher boards.
+# Inspired by BPC3003_2.03+.ucf from Jack Gassett / Gadget Factory
+
+NET "XCLK" LOC = "P89" | IOSTANDARD = LVCMOS25 | PERIOD = 31.25ns ;
+
+#NET "W1B<7>" LOC = "P61" ;
+NET "XRES" LOC = "P61" ;
+
+NET "UART_RXD"  LOC = "P88" | IOSTANDARD = LVCMOS25 ;
+NET "UART_TXD"  LOC = "P90" | IOSTANDARD = LVCMOS25 | DRIVE = 4 | SLEW = SLOW ;
+
+#NET "W1B<0>" LOC = "P85" ;
+NET "LED[3]" LOC = "P85" ;
+#NET "W1B<2>" LOC = "P78" ;
+NET "LED[2]" LOC = "P78" ;
+#NET "W1B<4>" LOC = "P68" ;
+NET "LED[1]" LOC = "P68" ;
+#NET "W1B<6>" LOC = "P63" ;
+NET "LED[0]" LOC = "P63" ;
+
+#NET "W1A<0>" LOC = "P18" ;
+NET "DEBUG[3]" LOC = "P18" ;
+#NET "W1A<2>" LOC = "P26" ;
+NET "DEBUG[2]" LOC = "P26" ;
+#NET "W1A<4>" LOC = "P35" ;
+NET "DEBUG[1]" LOC = "P35" ;
+#NET "W1A<6>" LOC = "P53" ;
+NET "DEBUG[0]" LOC = "P53" ;

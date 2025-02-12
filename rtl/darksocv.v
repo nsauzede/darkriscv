@@ -90,7 +90,7 @@ module darksocv
 `endif
 
 `ifdef __TESTMODE__
-	 
+//	 erreur_testmode();
     // tips to port darkriscv for a new target:
 	 // 
 	 // - 1st of all, test the blink code to confirms the reset
@@ -109,6 +109,8 @@ module darksocv
 	 
 	 assign LED      = (BLINK < (`BOARD_CK/2)) ? -1 : 0;
 	 assign UART_TXD = UART_RXD;
+`else
+//	 erreur_non_testmode();
 `endif
 
     // darkbridge interface
@@ -230,10 +232,15 @@ module darksocv
         .XATAO  (XATAIMUX[1]),
         .XDACK  (XDACKMUX[1]),        
         
+`ifdef __TESTMODE__
+        .RXD    (1'b1),
+        .TXD    (),
+        .LED    (),
+`else
         .RXD    (UART_RXD),
         .TXD    (UART_TXD),
-
         .LED    (LED),
+`endif
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
