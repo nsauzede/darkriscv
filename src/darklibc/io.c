@@ -76,6 +76,7 @@ char *board_name(int id)
            id==16 ? "lattice ecp5-85F ulx3s" :
            id==17 ? "qmtech cyclone 10lp c016" :
            id==18 ? "piswords ch34x lx16" :
+           id==99 ? "max1000 max10" :
                     "unknown";
 }
 
@@ -88,7 +89,7 @@ void irq_handler(void)
     {
         if(!utimers--)
         {
-            io->led++;
+//            io->led++;
             utimers=99;
         }
         io->irq = IRQ_TIMR;

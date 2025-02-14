@@ -150,7 +150,7 @@ int main(void)
     
     printf("\n");
 
-    printf("Welcome to DarkRISCV!\n\n");
+    printf("W3lc0m3 to DarkRISCV!\n\n");
 
     // main loop
 
@@ -172,7 +172,7 @@ int main(void)
                 {
                     if(!utimers--)
                     {
-                        io->led++;
+//                        io->led++;
                         utimers=999999;
                     }
                     io->irq = IRQ_TIMR;
