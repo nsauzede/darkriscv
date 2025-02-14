@@ -74,7 +74,7 @@ endif
     export AR  = $(CCPATH)/$(CROSS)-ar
     export CPP = $(CCPATH)/$(CROSS)-cpp
 
-       CFLAGS  = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks -m$(ENDIAN)-endian
+       CFLAGS  = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks -m$(ENDIAN)-endian -fno-ident
        CFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include -I../$(DARKLIBC)/include
        CFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 export CFLAGS += -mcmodel=medany -mexplicit-relocs # relocatable code
