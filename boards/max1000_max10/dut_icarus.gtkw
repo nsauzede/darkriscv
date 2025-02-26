@@ -1,0 +1,36 @@
+[*]
+[*] GTKWave Analyzer v3.3.120 (w)1999-2024 BSI
+[*] Wed Feb 19 15:02:41 2025
+[*]
+[dumpfile] "dut_icarus.vcd"
+[dumpfile_mtime] "Wed Feb 19 15:02:33 2025"
+[dumpfile_size] 48542230
+[savefile] "dut_icarus.gtkw"
+[timestart] 0
+[size] 1920 1033
+[pos] -1 -1
+*-21.167297 5200000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] dut_tb.
+[treeopen] dut_tb.dut1.
+[treeopen] dut_tb.dut1.soc0.
+[sst_width] 273
+[signals_width] 261
+[sst_expanded] 1
+[sst_vpaned_height] 318
+@420
+dut_tb.dut1.BOARD_CK
+dut_tb.dut1.INIT_FILE
+@28
+dut_tb.dut1.clk
+@22
+dut_tb.dut1.leds[7:0]
+@28
+dut_tb.dut1.reset
+dut_tb.dut1.rx
+dut_tb.dut1.spi_csn
+dut_tb.dut1.spi_miso
+dut_tb.dut1.spi_mosi
+dut_tb.dut1.spi_sck
+dut_tb.dut1.tx
+[pattern_trace] 1
+[pattern_trace] 0

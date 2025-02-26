@@ -435,8 +435,13 @@
 `endif
 
 `ifdef MAX1000_MAX10
+`ifdef SIMULATION
+    `define BOARD_ID 0  // avoid uart wait on boot when simulating the board
+`else
     `define BOARD_ID 19
+`endif
     `define BOARD_CK 32000000
+    `define SPI 1
 `endif
 
 `ifndef BOARD_ID

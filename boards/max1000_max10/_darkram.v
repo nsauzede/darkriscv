@@ -1,6 +1,71 @@
 `timescale 1ns / 1ps
 `include "../../rtl/config.vh"
 
+`ifdef SIMULATION
+module darkram #(parameter INIT_FILE = "memory_init.mem")
+(
+    input           CLK,    
+    input           RES,    
+    input           HLT,    
+
+    input           IDREQ,  
+    input  [31:0]   IADDR,  
+    output [31:0]   IDATA,  
+    output          IDACK,  
+
+    input           XDREQ,  
+    input           XRD,    
+    input           XWR,    
+    input  [3:0]    XBE,    
+    input  [31:0]   XADDR,  
+    input  [31:0]   XATAI,  
+    output [31:0]   XATAO,  
+    output          XDACK,  
+
+    output [3:0]    DEBUG   
+);
+
+    reg [31:0] ram [0:8191];  // 4KB RAM
+    reg [31:0] ram_q_a = 0, ram_q_b = 0;
+
+    initial begin
+        $readmemh(INIT_FILE, ram); // Load memory contents
+    end
+
+    always @(posedge CLK) begin
+//        if (RES) begin
+//            ram_q_a <= 0;
+//        end else begin
+        if (XDREQ && XWR) begin
+            if (XBE[0]) ram[XADDR[13:2]][7:0]   <= XATAI[7:0];
+            if (XBE[1]) ram[XADDR[13:2]][15:8]  <= XATAI[15:8];
+            if (XBE[2]) ram[XADDR[13:2]][23:16] <= XATAI[23:16];
+            if (XBE[3]) ram[XADDR[13:2]][31:24] <= XATAI[31:24];
+        end
+
+//        if (IDREQ)
+            ram_q_a <= ram[IADDR[12:2]];
+            
+        if (XDREQ && XRD)
+            ram_q_b <= ram[XADDR[12:2]];
+//        end
+    end
+
+    assign IDATA = ram_q_a;
+    assign IDACK = IDREQ;
+
+    assign XATAO = ram_q_b;
+    assign XDACK = DTACK==1 ||(XDREQ&&XWR);
+    reg [3:0] DTACK  = 0;
+    always@(posedge CLK) // stage #1.0
+    begin
+        DTACK <= RES ? 0 : DTACK ? DTACK-1 : XDREQ && XRD ? 1 : 0;
+    end
+
+    // Debug outputs (for observability)
+    assign DEBUG = { XDREQ,XRD,XWR,XDACK };
+endmodule
+`else
 module darkram #(parameter INIT_FILE = "../memory_init.mif")
 (
     input           CLK,    // Clock
@@ -79,3 +144,4 @@ module darkram #(parameter INIT_FILE = "../memory_init.mif")
     assign DEBUG = { XDREQ,XRD,XWR,XDACK };
 
 endmodule
+`endif

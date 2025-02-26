@@ -36,15 +36,17 @@ RTL:=../rtl
 SRC:=../src
 
 RTLS:=
-RTLS+=$(RTL)/darksocv.v
-RTLS+=$(RTL)/darkio.v
 RTLS+=$(RTL)/darkpll.v
 RTLS+=$(RTL)/darkuart.v
 RTLS+=$(RTL)/darkriscv.v
 RTLS+=$(RTL)/darkbridge.v
 RTLS+=$(BRD)/dut.v
 RTLS+=$(BRD)/top.v
+RTLS+=$(BRD)/_darksocv.v
+RTLS+=$(BRD)/_darkio.v
 RTLS+=$(BRD)/_darkram.v
+RTLS+=$(BRD)/sequencer.v
+RTLS+=$(BRD)/spi_master.v
 
 BOOT:=$(BRD)/memory_init.mif
 
