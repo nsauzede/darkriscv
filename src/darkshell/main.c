@@ -308,9 +308,12 @@ int main(void)
           else
           if(!strcmp(argv[0],"gpio"))
           {
-              if(argv[1]) io->gpio = xtoi(argv[1]);
+//              if(argv[1]) io->gpio = xtoi(argv[1]);
 
-              printf("gpio = %x\n",io->gpio);
+//              printf("gpio = %x\n",io->gpio);
+              unsigned int *gpio = (void *)io+10;
+              if(argv[1]) *gpio = xtoi(argv[1]);
+              printf("gpio = %x\n",*gpio);
           }
           else
           if(!strcmp(argv[0],"mul"))

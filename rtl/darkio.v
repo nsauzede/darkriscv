@@ -113,7 +113,8 @@ module darkio
                                 IACK[0] <= XATAI[0+24] ? IREQ[0] : IACK[0];
                             end
                 5'b01000:   LEDFF   <= XATAI[15:0];
-                5'b01010:   GPIOFF  <= XATAI[31:16];
+                //5'b01010:   GPIOFF  <= XATAI[31:16];
+                5'b01010:   GPIOFF  <= XATAI[15:0];
                 5'b01100:   TIMERFF <= XATAI[31:0];
             endcase
         end
@@ -157,7 +158,8 @@ module darkio
     assign XIRQ = |BOARD_IRQ;
     
 `ifndef __TESTMODE__
-    assign LED = LEDFF;
+//    assign LED = LEDFF;
+    assign LED = GPIOFF;
 `endif
 
     // darkuart
