@@ -70,6 +70,37 @@ module darkio
     output  [3:0] DEBUG // osciloscope
 );
 
+`ifdef SPIBB
+    wire [31:0] LED_;
+    wire [31:0] IPORT_;// general-purpose inputs
+    wire [31:0] OPORT_;// general-purpose outputs
+    wire miso;                                  // SDO/SA0      I MISO      I (SA0)
+    wire [15:0] out_x_l_response;
+    wire oe;
+    wire csn;                                   // CS           O CSN       O (1)
+    wire sck;                                   // SCL/SPC      O SCK       O SCL
+    wire mosi;                                  // SDA/SDI/SDO  O MOSI     IO SDA
+    assign LED = {15'b0, out_x_l_response, 3'b0, miso, oe, csn, sck, mosi};
+//    assign IPORT_ = {miso, 7'b0, out_x_l_response, 4'b0, oe, csn, sck, mosi};
+//    assign IPORT_ = {1'b0, 7'b0, out_x_l_response, 4'b0, oe, csn, sck, mosi};
+    assign IPORT_ = {oe ? miso : 1'b1, 7'b0, out_x_l_response, 4'b0, oe, csn, sck, mosi};
+//    assign IPORT_ = {oe ? miso : 1'b0, 31'b0};
+    assign OPORT = {miso, 7'b0, out_x_l_response, 4'b0, oe, csn, sck, mosi};
+    assign out_x_l_response = OPORT_[23:8];
+    assign oe = OPORT_[3];
+    assign csn = oe ? OPORT_[2] : 1'b1;
+    assign sck = oe ? OPORT_[1] : 1'b1;
+    assign mosi = oe ? OPORT_[0] : 1'b1;
+    lis3dh_stub lis3dh_stub0 (
+        .out_x_l_response(out_x_l_response),
+        .clk(CLK),
+        .mosi(mosi),
+        .miso(miso),
+        .sck(sck),
+        .cs(csn)
+    );
+`endif
+
     // io block
 
     reg [31:0] OPORTFF = 0;
@@ -138,7 +169,7 @@ module darkio
                 5'b01100:   TIMERFF <= XATAI[31:0];
                 5'b110xx:   begin
                                 OPORTFF <= XATAI;
-                                //$display("*** SIM: current OPORT=%x bus %x XBE=%b XADDR=%x",OPORTFF,XATAI,XBE,XADDR);
+                                $display("*** SIM: current OPORTFF=%x bus %x XBE=%b XADDR=%x",OPORTFF,XATAI,XBE,XADDR);
                             end
 `ifdef SPI
 `ifdef SIMULATION
@@ -177,7 +208,14 @@ module darkio
                 5'b010xx:   IOMUXFF <= LEDFF;
                 5'b011xx:   IOMUXFF <= TIMERFF;
                 5'b100xx:   IOMUXFF <= TIMEUS;
+`ifdef SPIBB
+                5'b101xx:   begin
+                                IOMUXFF <= IPORT_;
+                                $display("*** SIM: current IOMUXFF=%x IPORT_ %x XBE=%b XADDR=%x",IOMUXFF,IPORT_,XBE,XADDR);
+                            end
+`else
                 5'b101xx:   IOMUXFF <= IPORT;
+`endif
                 5'b110xx:   IOMUXFF <= OPORTFF;
 `ifdef SPI
                 5'b111xx:   IOMUXFF <= SDATA; // from spi
@@ -194,9 +232,17 @@ module darkio
     assign XIRQ = |BOARD_IRQ;
     
 `ifndef __TESTMODE__
+`ifdef SPIBB
+    assign LED_ = LEDFF;
+`else
     assign LED = LEDFF;
 `endif
+`endif
+`ifdef SPIBB
+    assign OPORT_ = OPORTFF;
+`else
     assign OPORT = OPORTFF;
+`endif
 
     // darkuart
 

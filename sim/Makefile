@@ -47,6 +47,17 @@ RTLS += ../rtl/darkspi.v                \
         ../rtl/lib/spi/spi_master.v     \
         ../rtl/lib/spi/lis3dh_stub.v
 endif
+ifeq ($(APPLICATION),spibbdemo)
+ICARUS += -DSPIBB=1
+RTLS += \
+        ../rtl/lib/spi/lis3dh_stub.v
+endif
+ifeq ($(APPLICATION),i2cdemo)
+ICARUS += -DI2C=1
+#RTLS += ../rtl/darki2c.v                \
+#        ../rtl/lib/i2c/i2c_master.v     \
+#        ../rtl/lib/i2c/lis3dh_i2c_stub.v
+endif
 
 INCS = ../rtl/config.vh
 XSIM = darksocv
@@ -74,7 +85,7 @@ $(VCDS): $(XSIM)
 	@echo finish |                                          \
 	awk '/^`define __TRACE__/{ exit(-1) }' ../rtl/config.vh \
 	&& ./$(XSIM)                                            \
-	|| ./$(XSIM) |                                          \
+	|| echo ./$(XSIM) |                                          \
 	    awk '{  if($$0~/trace:/) {                          \
 	        print > "$(TRCE)";                              \
 	        if($$0~/40000005:/) {                           \

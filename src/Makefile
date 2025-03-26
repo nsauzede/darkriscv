@@ -60,6 +60,16 @@ ifeq ($(APPLICATION),spidemo)
     ASFLAGS += -DSPI=1
 endif
 
+ifeq ($(APPLICATION),spibbdemo)
+    CFLAGS += -DSPIBB=1
+    ASFLAGS += -DSPIBB=1
+endif
+
+ifeq ($(APPLICATION),i2cdemo)
+    CFLAGS += -DI2C=1
+    ASFLAGS += -DI2C=1
+endif
+
 DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds $(LIBS) $(APPLICATION)/$(APPLICATION).a
 
 ifdef HARVARD

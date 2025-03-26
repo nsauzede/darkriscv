@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2025, Nicolas Sauzede <nicolas.sauzede@gmail.com>
 # All rights reserved.
 #
@@ -26,66 +25,43 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# ===8<--------------------------------------------------------- cut here!
 
-BOARD:=max1000_max10
+include ../config.mk
 
-BRD:=../boards/$(BOARD)
-RTL:=../rtl
-SRC:=../src
+# to make it smaller!
+# SMALL = 1
 
-RTLS:=
-RTLS+=$(RTL)/darksocv.v
-RTLS+=$(RTL)/darkio.v
-RTLS+=$(RTL)/darkpll.v
-RTLS+=$(RTL)/darkuart.v
-RTLS+=$(RTL)/darkriscv.v
-RTLS+=$(RTL)/darkbridge.v
-RTLS+=$(BRD)/dut.v
-RTLS+=$(BRD)/top.v
-RTLS+=$(BRD)/_darkram.v
-ifeq ($(APPLICATION),spidemo)
-RTLS+=$(RTL)/darkspi.v                \
-      $(RTL)/lib/spi/spi_master.v     \
-      $(RTL)/lib/spi/lis3dh_stub.v
-endif
-ifeq ($(APPLICATION),spibbdemo)
-RTLS+=\
-      $(RTL)/lib/spi/lis3dh_stub.v
-endif
-ifeq ($(APPLICATION),i2cdemo)
-#RTLS+=$(RTL)/darki2c.v                \
-#      $(RTL)/lib/i2c/i2c_master.v     \
-#      $(RTL)/lib/i2c/lis3dh_i2c_stub.v
+ifdef SMALL
+    CFLAGS += -DSMALL
 endif
 
-BOOT:=$(BRD)/memory_init.mif
+PROJ = i2cdemo
+OBJS = main.o
+ASMS = main.s
+SRCS = main.c
 
-BIT:=$(BRD)/output_files/max1000.sof
+DEPS = $(SRCS) $(ASMS) $(OBJS) $(LIBS) # $(PROJ).ld $(PROJ).lds $(DARKLIBC)/darklibc.a
 
-QUARTUS:=~/intelFPGA_lite/17.0
-QBIN:=$(QUARTUS)/quartus/bin
+TARGETS = $(PROJ).a
 
-default: all
+.PHONY: all
 
-$(BIT): $(RTLS) $(BOOT)
-	(cd $(BRD) ; $(QBIN)/quartus_sh --flow compile max1000)
-
-$(BRD)/memory_init.mem: $(SRC)/darksocv.mem
-	cp $< $@
-
-$(BRD)/memory_init.bin: $(BRD)/memory_init.mem
-	(cd $(BRD) ; ./mem2bin.sh)
-
-$(BOOT): $(BRD)/memory_init.bin
-	(cd $(BRD) ; ./bin2mif.sh)
-
-all: $(BIT)
-
-install: $(BIT)
-	(cd $(BRD) ; $(QBIN)/quartus_pgm -c Arrow-USB-Blaster max1000.cdf)
+all: $(TARGETS) $(DEPS)
+	@echo sources ok for $(TARGETS).
 
 clean:
-	rm -f $(BRD)/memory_init.mif $(BRD)/memory_init.mem $(BRD)/memory_init.bin
-	rm -rf $(BRD)/db $(BRD)/incremental_db $(BRD)/output_files
+	-rm -f $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem,a} $(PROJ)_uart.bin
+
+%.o: %.s Makefile
+	$(AS) $(ASFLAGS) -c $< -o $@
+
+%.s: %.c Makefile
+	$(CC) $(CFLAGS) -S $< -o $@
+
+$(PROJ).a: $(OBJS) Makefile
+	$(AR) $(ARFLAGS) $@ $(OBJS)
+	$(RL) $@
+	
+$(PROJ).x86: $(SRCS)
+	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86 -DBUILD="\"$(BUILD)\"" -DARCH="\"x86\""
+	@echo x86 ok.

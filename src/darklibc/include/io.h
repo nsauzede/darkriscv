@@ -48,11 +48,19 @@ struct DARKIO {
 
     } uart;
 
-    unsigned int led;        // 08
-    unsigned int timer;      // 0c
-    unsigned int timeus;     // 10
-    unsigned int iport;      // 14
-    unsigned int oport;      // 18
+    unsigned int led;        // 08/09/0a/0b
+    unsigned int timer;      // 0c/0d/0e/0f
+    unsigned int timeus;     // 10/11/12/13
+    union {
+        unsigned char   iportb[4];      // 14/15/16/17
+        unsigned short  iporth[2];      // 14/15/16/17
+        unsigned int    iport;          // 14/15/16/17
+    };
+    union {
+        unsigned char   oportb[4];      // 18/19/1a/1b
+        unsigned short  oporth[2];      // 18/19/1a/1b
+        unsigned int    oport;          // 18/19/1a/1b
+    };
 
     struct DARKSPI {
         union {

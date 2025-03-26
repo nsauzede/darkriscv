@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 `timescale 1ns / 1ps
-//`include "../../../rtl/config.vh"
+`include "../rtl/config.vh"
 
 /*
     Simple LIS3DH SPI stub (STMicroelectronics LIS3DH accelerometer)
@@ -73,7 +73,7 @@ localparam
                     bit_count <= 0;
                     shift_reg <= 8'b0;
                 end
-                miso <= 1'b1;
+                miso <= 1'bZ;
                 out_x_l_flag <= 0;
             end
             RECEIVING: begin

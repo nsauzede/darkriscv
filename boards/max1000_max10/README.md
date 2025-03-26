@@ -51,8 +51,15 @@ To clean the board-related objects:
 make clean BOARD=max1000_max10
 ```
 
+# I2C Support
+Builtin I2C accelerometer sensor can be accessed by selecting the i2cdemo application.
+```shell
+make clean all BOARD=max1000_max10 APPLICATION=i2cdemo
+make install BOARD=max1000_max10
+```
+
 # SPI Support
-Builtin SPI accelerometer sensor can be accessed by enabling the Verilog macro and selecting the spidemo application.
+Builtin SPI accelerometer sensor can be accessed by selecting the spidemo application.
 ```shell
 make clean all BOARD=max1000_max10 APPLICATION=spidemo
 make install BOARD=max1000_max10
