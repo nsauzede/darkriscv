@@ -1,0 +1,171 @@
+[*]
+[*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
+[*] Fri Mar 28 09:45:23 2025
+[*]
+[dumpfile] "/mnt/huge/lenovo/nico/perso/git/darkriscv/sim/darksocv.vcd"
+[dumpfile_mtime] "Fri Mar 28 09:43:57 2025"
+[dumpfile_size] 70222738
+[savefile] "/mnt/huge/lenovo/nico/perso/git/darkriscv/sim/darksocv_spi.gtkw"
+[timestart] 233503900
+[size] 1918 494
+[pos] -1 -1
+*-17.119167 234005000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] darksimv.
+[treeopen] darksimv.soc0.
+[treeopen] darksimv.soc0.bridge0.
+[treeopen] darksimv.soc0.io0.
+[sst_width] 290
+[signals_width] 196
+[sst_expanded] 1
+[sst_vpaned_height] 122
+@28
+darksimv.soc0.bridge0.core0.CLK
+@23
+darksimv.soc0.io0.lis3dh_stub0.bit_count[3:0]
+@28
+darksimv.soc0.io0.lis3dh_stub0.cs
+darksimv.soc0.io0.lis3dh_stub0.sck
+darksimv.soc0.io0.lis3dh_stub0.miso
+darksimv.soc0.io0.lis3dh_stub0.mosi
+@22
+darksimv.soc0.io0.OPORTFF[31:0]
+darksimv.soc0.io0.IPORT[31:0]
+@c00022
+darksimv.soc0.io0.OPORT[31:0]
+@28
+(0)darksimv.soc0.io0.OPORT[31:0]
+(1)darksimv.soc0.io0.OPORT[31:0]
+(2)darksimv.soc0.io0.OPORT[31:0]
+(3)darksimv.soc0.io0.OPORT[31:0]
+(4)darksimv.soc0.io0.OPORT[31:0]
+(5)darksimv.soc0.io0.OPORT[31:0]
+(6)darksimv.soc0.io0.OPORT[31:0]
+(7)darksimv.soc0.io0.OPORT[31:0]
+(8)darksimv.soc0.io0.OPORT[31:0]
+(9)darksimv.soc0.io0.OPORT[31:0]
+(10)darksimv.soc0.io0.OPORT[31:0]
+(11)darksimv.soc0.io0.OPORT[31:0]
+(12)darksimv.soc0.io0.OPORT[31:0]
+(13)darksimv.soc0.io0.OPORT[31:0]
+(14)darksimv.soc0.io0.OPORT[31:0]
+(15)darksimv.soc0.io0.OPORT[31:0]
+(16)darksimv.soc0.io0.OPORT[31:0]
+(17)darksimv.soc0.io0.OPORT[31:0]
+(18)darksimv.soc0.io0.OPORT[31:0]
+(19)darksimv.soc0.io0.OPORT[31:0]
+(20)darksimv.soc0.io0.OPORT[31:0]
+(21)darksimv.soc0.io0.OPORT[31:0]
+(22)darksimv.soc0.io0.OPORT[31:0]
+(23)darksimv.soc0.io0.OPORT[31:0]
+(24)darksimv.soc0.io0.OPORT[31:0]
+(25)darksimv.soc0.io0.OPORT[31:0]
+(26)darksimv.soc0.io0.OPORT[31:0]
+(27)darksimv.soc0.io0.OPORT[31:0]
+(28)darksimv.soc0.io0.OPORT[31:0]
+(29)darksimv.soc0.io0.OPORT[31:0]
+(30)darksimv.soc0.io0.OPORT[31:0]
+(31)darksimv.soc0.io0.OPORT[31:0]
+@1401200
+-group_end
+@c00022
+darksimv.soc0.io0.LED[31:0]
+@28
+(0)darksimv.soc0.io0.LED[31:0]
+(1)darksimv.soc0.io0.LED[31:0]
+(2)darksimv.soc0.io0.LED[31:0]
+(3)darksimv.soc0.io0.LED[31:0]
+(4)darksimv.soc0.io0.LED[31:0]
+(5)darksimv.soc0.io0.LED[31:0]
+(6)darksimv.soc0.io0.LED[31:0]
+(7)darksimv.soc0.io0.LED[31:0]
+(8)darksimv.soc0.io0.LED[31:0]
+(9)darksimv.soc0.io0.LED[31:0]
+(10)darksimv.soc0.io0.LED[31:0]
+(11)darksimv.soc0.io0.LED[31:0]
+(12)darksimv.soc0.io0.LED[31:0]
+(13)darksimv.soc0.io0.LED[31:0]
+(14)darksimv.soc0.io0.LED[31:0]
+(15)darksimv.soc0.io0.LED[31:0]
+(16)darksimv.soc0.io0.LED[31:0]
+(17)darksimv.soc0.io0.LED[31:0]
+(18)darksimv.soc0.io0.LED[31:0]
+(19)darksimv.soc0.io0.LED[31:0]
+(20)darksimv.soc0.io0.LED[31:0]
+(21)darksimv.soc0.io0.LED[31:0]
+(22)darksimv.soc0.io0.LED[31:0]
+(23)darksimv.soc0.io0.LED[31:0]
+(24)darksimv.soc0.io0.LED[31:0]
+(25)darksimv.soc0.io0.LED[31:0]
+(26)darksimv.soc0.io0.LED[31:0]
+(27)darksimv.soc0.io0.LED[31:0]
+(28)darksimv.soc0.io0.LED[31:0]
+(29)darksimv.soc0.io0.LED[31:0]
+(30)darksimv.soc0.io0.LED[31:0]
+(31)darksimv.soc0.io0.LED[31:0]
+@1401200
+-group_end
+@200
+-
+@22
+darksimv.soc0.bridge0.core0.LDATA[31:0]
+@28
+darksimv.soc0.bridge0.core0.LUI
+darksimv.soc0.bridge0.core0.MCC
+@22
+darksimv.soc0.bridge0.core0.NXPC2[31:0]
+darksimv.soc0.bridge0.core0.NXPC[31:0]
+darksimv.soc0.bridge0.core0.OPCODE[6:0]
+darksimv.soc0.bridge0.core0.PCSIMM[31:0]
+darksimv.soc0.bridge0.core0.PC[31:0]
+@28
+darksimv.soc0.bridge0.core0.RCC
+darksimv.soc0.bridge0.core0.RES
+@22
+darksimv.soc0.bridge0.core0.RMDATA[31:0]
+darksimv.soc0.bridge0.core0.S1PTR[3:0]
+darksimv.soc0.bridge0.core0.S1REG[31:0]
+darksimv.soc0.bridge0.core0.S2PTR[3:0]
+darksimv.soc0.bridge0.core0.S2REGX[31:0]
+darksimv.soc0.bridge0.core0.S2REG[31:0]
+@28
+darksimv.soc0.bridge0.core0.SCC
+@22
+darksimv.soc0.bridge0.core0.SIMM[31:0]
+@28
+darksimv.soc0.bridge0.core0.SYS
+@22
+darksimv.soc0.bridge0.core0.U1REG[31:0]
+darksimv.soc0.bridge0.core0.U2REGX[31:0]
+darksimv.soc0.bridge0.core0.U2REG[31:0]
+darksimv.soc0.bridge0.core0.UIMM[31:0]
+@28
+darksimv.soc0.bridge0.core0.XAUIPC
+darksimv.soc0.bridge0.core0.XBCC
+darksimv.soc0.bridge0.core0.XCUS
+@22
+darksimv.soc0.bridge0.core0.XIDATA[31:0]
+@28
+darksimv.soc0.bridge0.core0.XJAL
+darksimv.soc0.bridge0.core0.XJALR
+darksimv.soc0.bridge0.core0.XLCC
+darksimv.soc0.bridge0.core0.XLUI
+darksimv.soc0.bridge0.core0.XMCC
+darksimv.soc0.bridge0.core0.XRCC
+darksimv.soc0.bridge0.core0.XRES
+darksimv.soc0.bridge0.core0.XSCC
+@22
+darksimv.soc0.bridge0.core0.XSIMM[31:0]
+@28
+darksimv.soc0.bridge0.core0.XSYS
+@22
+darksimv.soc0.bridge0.core0.XUIMM[31:0]
+@420
+darksimv.soc0.bridge0.core0.clocks
+darksimv.soc0.bridge0.core0.flush
+darksimv.soc0.bridge0.core0.halt
+darksimv.soc0.bridge0.core0.i
+darksimv.soc0.bridge0.core0.load
+darksimv.soc0.bridge0.core0.running
+darksimv.soc0.bridge0.core0.store
+[pattern_trace] 1
+[pattern_trace] 0

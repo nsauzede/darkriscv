@@ -169,7 +169,7 @@ module darkio
                 5'b01100:   TIMERFF <= XATAI[31:0];
                 5'b110xx:   begin
                                 OPORTFF <= XATAI;
-                                $display("*** SIM: current OPORTFF=%x bus %x XBE=%b XADDR=%x",OPORTFF,XATAI,XBE,XADDR);
+//                                $display("*** SIM: current OPORTFF=%x bus %x XBE=%b XADDR=%x",OPORTFF,XATAI,XBE,XADDR);
                             end
 `ifdef SPI
 `ifdef SIMULATION
@@ -211,7 +211,7 @@ module darkio
 `ifdef SPIBB
                 5'b101xx:   begin
                                 IOMUXFF <= IPORT_;
-                                $display("*** SIM: current IOMUXFF=%x IPORT_ %x XBE=%b XADDR=%x",IOMUXFF,IPORT_,XBE,XADDR);
+//                                $display("*** SIM: current IOMUXFF=%x IPORT_ %x XBE=%b XADDR=%x",IOMUXFF,IPORT_,XBE,XADDR);
                             end
 `else
                 5'b101xx:   IOMUXFF <= IPORT;

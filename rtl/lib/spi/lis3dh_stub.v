@@ -47,9 +47,10 @@ module lis3dh_stub (
 localparam
     IDLE = 0,
     RECEIVING = 1,
-    PROCESSING = 2,
-    RESPONDING = 3;
-    reg [1:0] state = IDLE;
+    PROCESSING_wait = 2,
+    PROCESSING = 3,
+    RESPONDING = 4;
+    reg [2:0] state = IDLE;
     reg [7:0] shift_reg = 8'b0;   // Shift register for received data
     reg [7:0] response = 8'b0;    // Response register
     wire [15:0] out_x_l_response_ = out_x_l_response;
@@ -81,8 +82,14 @@ localparam
                     shift_reg <= {shift_reg[6:0], mosi_d};
                     bit_count <= bit_count + 1;
                     if (bit_count == 7) begin
-                        state <= PROCESSING;
+//                        state <= PROCESSING_wait;
+                        state <= PROCESSING_wait;
                     end
+                end
+            end
+            PROCESSING_wait: begin
+                if (!sck_d && sck_prev) begin // Falling edge of SCK
+                    state <= PROCESSING;
                 end
             end
             PROCESSING: begin

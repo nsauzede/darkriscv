@@ -36,7 +36,6 @@
 #define MAX_RETRY 1000
 volatile int waste_counter = 0;
 static inline void waste_time(int n) {
-    //printf("waste_counter=%d\n", waste_counter);
     for (int i = 0; i < n; i++) {
         waste_counter++;
     }
@@ -45,46 +44,35 @@ static inline int spi_read_do_(void) {
 //    return 1 & (io->iport >> 31);
     return !!(io->iport & (1 << 31));
 }
-unsigned int ret = 0;
+unsigned int g_out_x_l_response = 0;
 static inline void spi_write_oe_es_cl_di_(unsigned char oe_es_cl_di) {
-    io->oport = ((ret & 0xffff) << 16) | oe_es_cl_di;
-//    spi_read_do_();
+    io->oport = ((g_out_x_l_response & 0xffff) << 8) | oe_es_cl_di;
 }
 unsigned int spi_transfer_(unsigned int command_data, int nbits) {
-    printf("%s: command_data=%x nbits=%d\n", __func__, command_data, nbits);
-    ret = 0;
+//    printf("%s: command_data=%x nbits=%d\n", __func__, command_data, nbits);
+    unsigned int ret = 0;
     spi_write_oe_es_cl_di_(0x7);    // output disabled / tristate       0111
     spi_write_oe_es_cl_di_(0xf);    // output enabled / SPI Idle        1111
     spi_write_oe_es_cl_di_(0xb);    // output enabled / SPI Active      1011
     for (int i = nbits; i >= 0; i--) {
         int bit;
         bit = !!(command_data & (1 << i));
-//        printf("%s: i=%d bit=%d\n", __func__, i, bit);
         spi_write_oe_es_cl_di_(0x8 | bit);                      //      100?
         waste_time(3);
-        spi_write_oe_es_cl_di_(0xa | bit);
+        spi_write_oe_es_cl_di_(0xa | bit);                      //      101?
         bit = spi_read_do_();
-//        waste_time(0);
         ret = (ret << 1) | bit;
     }
     spi_write_oe_es_cl_di_(0xf);    // output enabled / SPI Idle
     spi_write_oe_es_cl_di_(0x7);    // output disabled / tristate
-    printf("%s: returning %x\n", __func__, ret);
+//    printf("%s: returning %x\n", __func__, ret);
     return ret;
 }
 static inline unsigned short spi_transfer16(unsigned short command_data) {
-#if 1
     return spi_transfer_(command_data, 15);
-#else
-    return 0;
-#endif
 }
 static inline unsigned int spi_transfer24(unsigned int command_data) {
-#if 1
     return spi_transfer_(command_data, 23);
-#else
-    return 0;
-#endif
 }
 int simu() {
     printf("%s\n", __func__);
@@ -96,11 +84,6 @@ int simu() {
     io->led = ret;
     if ((ret & 0xff) != exp) {
         printf("Bad Whoami %x expected %x\n>", ret, exp);
-//        printf("Bad Whoami\n");
-//        io->led = ret;
-//        printf("got %x\n", ret);
-//        printf("expected %x\n", exp);
-//        printf(">");
         return -1;
     }
     io->led = 0xfe;
@@ -112,8 +95,9 @@ int simu() {
     exp = 0x9a00;
     printf("%s: looping\n", __func__);
     for (int i = 0; i < 1000000; i++) {
-        printf("%s: i=%d\n", __func__, i);
+//        printf("%s: i=%d\n", __func__, i);
         io->spi.out_x_l_response = exp;
+        g_out_x_l_response = ((exp & 0xff) << 8) + ((exp & 0xff00) >> 8);
         ret = spi_transfer24(0xe80000);
         if (ret != exp) {
             printf("Bad out_x %x expected %x\n>", ret, exp);
