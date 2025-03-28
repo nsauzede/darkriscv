@@ -53,10 +53,10 @@ module darkio
     input         RXD,  // UART receive line
     output        TXD,  // UART transmit line
 `ifdef SPI
-    output        SCK,  // SPI clock output
-    output        MOSI, // SPI master data output, slave data input
-    input         MISO, // SPI master data input, slave data output
-    output        CSN,  // SPI CSN output (active LOW)
+    inout         CSN,  // SPI CSN output (active LOW)
+    inout         SCK,  // SPI clock output
+    inout         MOSI, // SPI master data output, slave data input
+    inout         MISO, // SPI master data input, slave data output
 `endif
 
 `ifdef SIMULATION
@@ -72,6 +72,12 @@ module darkio
 
     // io block
 
+`ifdef SPI
+`define SPIBB
+`endif
+`ifdef SPIBB
+    reg [31:0] IPORT_ = 0;
+`endif
     reg [31:0] OPORTFF = 0;
     reg [31:0] LEDFF  = 0;
 
@@ -102,9 +108,7 @@ module darkio
     reg [1:0] DTACK  = 0;
 
 `ifdef SPI
-`ifdef SIMULATION
-    reg [15:0] out_x_l_response = 0;    // SPI slave LIS3DH stub
-`endif
+    reg [15:0] out_x_l_response = 16'bz;    // SPI slave LIS3DH stub
 `endif
     always@(posedge CLK)
     begin
@@ -177,7 +181,11 @@ module darkio
                 5'b010xx:   IOMUXFF <= LEDFF;
                 5'b011xx:   IOMUXFF <= TIMERFF;
                 5'b100xx:   IOMUXFF <= TIMEUS;
+`ifdef SPIBB
+                5'b101xx:   IOMUXFF <= IPORT_;
+`else
                 5'b101xx:   IOMUXFF <= IPORT;
+`endif
                 5'b110xx:   IOMUXFF <= OPORTFF;
 `ifdef SPI
                 5'b111xx:   IOMUXFF <= SDATA; // from spi
@@ -226,20 +234,41 @@ module darkio
     );
 
 `ifdef SPI
-`ifdef SIMULATION
-    wire miso;
-`endif
     // darkspi
 
     wire [3:0] SDEBUG;
+`ifdef SPIBB
+    wire spibb_ena;
+    always@(posedge CLK) begin
+        if (RES) begin
+            out_x_l_response <= 16'bz;
+        end else if (spibb_ena) begin
+            out_x_l_response <= OPORTFF[23:8];
+        end
+    end
+    assign spibb_ena = OPORTFF[3];
+    assign CSN = spibb_ena ? OPORTFF[2] : 1'bz;
+    assign SCK = spibb_ena ? OPORTFF[1] : 1'bz;
+    assign MOSI = spibb_ena ? OPORTFF[0] : 1'bz;
+    always@(posedge CLK) begin
+        if (RES) begin
+            IPORT_ <= 32'b0;
+        end else if (spibb_ena & !CSN) begin
+            IPORT_ <= {MISO, 7'b0, out_x_l_response, 4'b0, spibb_ena, CSN, SCK, MOSI};
+        end
+    end
+`endif
 
     darkspi
-//    #(.DIV_COEF(SPI_DIV_COEF))
-    #(.DIV_COEF(1))
+    #(.DIV_COEF(SPI_DIV_COEF))
     spi0
     (
       .CLK(CLK),
+`ifdef SPIBB
+      .RES(RES | spibb_ena),
+`else
       .RES(RES),
+`endif
       .RD(!HLT && XRD && XDREQ && XADDR[4:2]==7),
       .WR(!HLT && XWR && XDREQ && XADDR[4:2]==7),
       .BE(XBE),
@@ -247,14 +276,10 @@ module darkio
       .DATAO(SDATA),
       //.IRQ(SPI_IRQ),
 
+      .CSN(CSN),        // SPI CSN output (active LOW)
       .SCK(SCK),        // SPI clock output
       .MOSI(MOSI),      // SPI master data output, slave data input
-`ifdef SIMULATION
-      .MISO(miso),      // SPI master data input, slave data output
-`else
       .MISO(MISO),      // SPI master data input, slave data output
-`endif
-      .CSN(CSN),        // SPI CSN output (active LOW)
 
 `ifdef SIMULATION
 //      .ESIMREQ(ESIMREQ),
@@ -271,9 +296,9 @@ module darkio
 `endif
         .clk(CLK),
         .sck(SCK),
-        .cs(CSN),
+        .csn(CSN),
         .mosi(MOSI),
-        .miso(miso)
+        .miso(MISO)
     );
 `endif
 `endif
