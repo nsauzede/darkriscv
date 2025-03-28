@@ -31,6 +31,8 @@ module pmodbutled (
     assign pio[1] = 1'bz;
 
     // Assign io pin values to button outputs
+    assign buttons[3] = 1'b0;
+    assign buttons[2] = 1'b0;
     assign buttons[1] = pio[3];
     assign buttons[0] = pio[1];
 endmodule

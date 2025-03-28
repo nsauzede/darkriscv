@@ -75,9 +75,9 @@ module darkspi #(parameter integer DIV_COEF = 0) (
     output [31:0]   DATAO,          // data output
     output          IRQ,            // interrupt req
 
+    output          SCK,            // SPI clock output
     output         MOSI,            // SPI master data output, slave data input
     input          MISO,            // SPI master data input, slave data output
-    output          SCK,            // SPI clock output
     output          CSN,            // SPI CSN output (active LOW)
 
 `ifdef SIMULATION

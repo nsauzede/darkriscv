@@ -34,44 +34,48 @@
 #include <math.h>
 
 #define MAX_RETRY 1000
-unsigned short spi_transfer16(unsigned short command_data) {
-    unsigned short ret = -1;
-    io->spi.spi16 = command_data;
-    for (int i = 0; i < MAX_RETRY; i++) {
-        int status = 0;
-        status = *(volatile unsigned char *)((volatile char *)io + 0x1c + 3);
-//        if (status & 0x2000000) {
-        if (status & 0x2) {
-            ret = io->spi.spi8;
-//            ret = io->spi.spi16;
-//            ret = status & 0xffff;
-            break;
-        }
-//        printf("%s: status=%x\n", __func__, status);
+volatile int waste_counter = 0;
+static inline void waste_time(int n) {
+    for (int i = 0; i < n; i++) {
+        waste_counter++;
     }
+}
+static inline int spi_read_do_(void) {
+//    return 1 & (io->iport >> 31);
+    return !!(io->iport & (1 << 31));
+}
+unsigned int g_out_x_l_response = 0;
+static inline void spi_write_oe_es_cl_di_(unsigned char oe_es_cl_di) {
+    io->oport = ((g_out_x_l_response & 0xffff) << 8) | oe_es_cl_di;
+}
+unsigned int spi_transfer_(unsigned int command_data, int nbits) {
+//    printf("%s: command_data=%x nbits=%d\n", __func__, command_data, nbits);
+    unsigned int ret = 0;
+    spi_write_oe_es_cl_di_(0x7);    // output disabled / tristate       0111
+    spi_write_oe_es_cl_di_(0xf);    // output enabled / SPI Idle        1111
+    spi_write_oe_es_cl_di_(0xb);    // output enabled / SPI Active      1011
+    for (int i = nbits; i >= 0; i--) {
+        int bit;
+        bit = !!(command_data & (1 << i));
+        spi_write_oe_es_cl_di_(0x8 | bit);                      //      100?
+        waste_time(3);
+        spi_write_oe_es_cl_di_(0xa | bit);                      //      101?
+        bit = spi_read_do_();
+        ret = (ret << 1) | bit;
+    }
+    spi_write_oe_es_cl_di_(0xf);    // output enabled / SPI Idle
+    spi_write_oe_es_cl_di_(0x7);    // output disabled / tristate
+//    printf("%s: returning %x\n", __func__, ret);
     return ret;
 }
-
-unsigned int spi_transfer24(unsigned int command_data) {
-    unsigned int ret = -1;
-    io->spi.spi32 = command_data & 0xffffff;
-    for (int i = 0; i < MAX_RETRY; i++) {
-        int status = 0;
-//        status = io->spi.spi32;
-        status = *(volatile unsigned char *)((volatile char *)io + 0x1c + 3);
-//        if (status & 0x2000000) {
-        if (status & 0x2) {
-//            ret = status & 0xffffff;
-//            ret = io->spi.spi16;
-            unsigned short spi16 = io->spi.spi16;
-            ret = ((spi16 & 0xff) << 8) | ((spi16 & 0xff00) >> 8);
-            break;
-        }
-    }
-    return ret;
+static inline unsigned short spi_transfer16(unsigned short command_data) {
+    return spi_transfer_(command_data, 15);
 }
-
+static inline unsigned int spi_transfer24(unsigned int command_data) {
+    return spi_transfer_(command_data, 23);
+}
 int simu() {
+    printf("%s\n", __func__);
     io->led = 0xff;
     unsigned short ret = 0;
     unsigned short exp;
@@ -89,9 +93,11 @@ int simu() {
     io->led = 0xfb;
     spi_transfer16(0x2388);
     exp = 0x9a00;
+    printf("%s: looping\n", __func__);
     for (int i = 0; i < 1000000; i++) {
-        //printf("i=%d\n", i);
+//        printf("%s: i=%d\n", __func__, i);
         io->spi.out_x_l_response = exp;
+        g_out_x_l_response = ((exp & 0xff) << 8) + ((exp & 0xff00) >> 8);
         ret = spi_transfer24(0xe80000);
         if (ret != exp) {
             printf("Bad out_x %x expected %x\n>", ret, exp);
@@ -103,9 +109,11 @@ int simu() {
         if (i == 16)
             printf("Test passed.\n>");
     }
+    printf("%s: returning 0\n", __func__);
     return 0;
 }
 int sensor() {
+    printf("%s\n", __func__);
     io->led = 0xff;
     unsigned short ret = 0;
     unsigned short exp;
@@ -189,17 +197,40 @@ int main(void)
         t = io->timeus;
         printf("%d> ",t-t0);
         gets(buffer,sizeof(buffer));
-        printf("You entered [%s]\n", buffer);
-        if (!strncmp("whoami", buffer, 6)) {
-            whoami();
-        } else if (!strncmp("led", buffer, 3)) {
-            printf("led was %x\n", io->led);
-            io->led = ~io->led;
-        } else if (!strncmp("sensor", buffer, 6)) {
-            sensor();
-        } else if(!strcmp(buffer,"reboot")) {
-            printf("rebooting...\n");
-            break;
+//        printf("You entered [%s]\n", buffer);
+        char *argv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int   argc;
+
+        for(argc=0;argc<8 && (argv[argc]=strtok(argc==0?buffer:NULL," "));argc++)
+#if 0
+        printf("argc=%d:", argc);
+        for(argc=0;argc<8 && argv[argc]; argc++) printf(" [%s]", argv[argc]);
+        printf("\n");
+#endif
+        if(argv[0]) {
+            if (!strcmp("whoami", argv[0])) {
+                whoami();
+            } else if (!strcmp("led", argv[0])) {
+                printf("led was %x\n", io->led);
+                io->led = ~io->led;
+            } else if (!strcmp("sensor", argv[0])) {
+                sensor();
+            } else if(!strcmp(argv[0],"reboot")) {
+                printf("rebooting...\n");
+                break;
+            } else if(!strcmp(argv[0],"oport")) {
+                if(argv[1]) io->oport = xtoi(argv[1]);
+                printf("oport = %x\n", io->oport);
+            } else if(!strcmp(argv[0],"iport")) {
+                printf("iport = %x\n", io->iport);
+            } else if(!strcmp(argv[0],"ioport")) {
+                if(argv[1]) {
+                    io->oport = xtoi(argv[1]);
+                    printf("iport = %x\n", io->iport);
+                }
+            } else {
+                printf("Error: You entered [%s]\n", buffer);
+            }
         }
         t0 = t;
     }

@@ -42,9 +42,9 @@ module darksocv
     input        UART_RXD,  // UART receive line
     output       UART_TXD,  // UART transmit line
 `ifdef SPI
-    output        SPI_SCK,  // SPI clock output
     output       SPI_MOSI,  // SPI master data output, slave data input
     input        SPI_MISO,  // SPI master data input, slave data output
+    output        SPI_SCK,  // SPI clock output
     output        SPI_CSN,  // SPI CSN output (active LOW)
 `endif
 
@@ -248,9 +248,9 @@ module darksocv
         .TXD    (UART_TXD),
 
 `ifdef SPI
-        .SCK    (SPI_SCK),
         .MOSI   (SPI_MOSI),
         .MISO   (SPI_MISO),
+        .SCK    (SPI_SCK),
         .CSN    (SPI_CSN),
 `endif
         .LED    (LED),
