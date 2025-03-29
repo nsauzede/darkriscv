@@ -33,20 +33,63 @@
 #include <string.h>
 #include <math.h>
 
+#define SPIBB 1
+#ifdef SPIBB
+#define MAX_RETRY 1000
+volatile int waste_counter = 0;
+static inline void waste_time(int n) {
+    for (int i = 0; i < n; i++) {
+        waste_counter++;
+    }
+}
+static inline int spi_read_do_(void) {
+//    return 1 & (io->iport >> 31);
+    return !!(io->iport & (1 << 31));
+}
+unsigned int g_out_x_l_response = 0;
+static inline void spi_write_oe_es_cl_di_(unsigned char oe_es_cl_di) {
+    io->oport = ((g_out_x_l_response & 0xffff) << 8) | oe_es_cl_di;
+}
+unsigned int spi_transfer_(unsigned int command_data, int nbits) {
+//    printf("%s: command_data=%x nbits=%d\n", __func__, command_data, nbits);
+    unsigned int ret = 0;
+    spi_write_oe_es_cl_di_(0x7);    // output disabled / tristate       0111
+    spi_write_oe_es_cl_di_(0xf);    // output enabled / SPI Idle        1111
+    spi_write_oe_es_cl_di_(0xb);    // output enabled / SPI Active      1011
+    for (int i = nbits; i >= 0; i--) {
+        int bit;
+        bit = !!(command_data & (1 << i));
+        spi_write_oe_es_cl_di_(0x8 | bit);                      //      100?
+        waste_time(3);
+        spi_write_oe_es_cl_di_(0xa | bit);                      //      101?
+        bit = spi_read_do_();
+        ret = (ret << 1) | bit;
+//        ret <<= 1;
+//        if (bit) ret++;
+    }
+    spi_write_oe_es_cl_di_(0xf);    // output enabled / SPI Idle
+    spi_write_oe_es_cl_di_(0x7);    // output disabled / tristate
+//    printf("%s: returning %x\n", __func__, ret);
+    return ret;
+}
+static inline unsigned short spi_transfer16(unsigned short command_data) {
+    return spi_transfer_(command_data, 15);
+}
+static inline unsigned int spi_transfer24(unsigned int command_data) {
+    unsigned int spi16 = spi_transfer_(command_data, 23);
+    return ((spi16 & 0xff) << 8) | ((spi16 & 0xff00) >> 8);
+}
+#else
 unsigned short spi_transfer16(unsigned short command_data) {
     unsigned short ret = -1;
     io->spi.spi16 = command_data;
     for (int i = 0; i < 1000000; i++) {
         int status = 0;
         status = *(volatile unsigned char *)((volatile char *)io + 0x1c + 3);
-//        if (status & 0x2000000) {
         if (status & 0x2) {
             ret = io->spi.spi8;
-//            ret = io->spi.spi16;
-//            ret = status & 0xffff;
             break;
         }
-//        printf("%s: status=%x\n", __func__, status);
     }
     return ret;
 }
@@ -56,12 +99,8 @@ unsigned int spi_transfer24(unsigned int command_data) {
     io->spi.spi32 = command_data & 0xffffff;
     for (int i = 0; i < 1000000; i++) {
         int status = 0;
-//        status = io->spi.spi32;
         status = *(volatile unsigned char *)((volatile char *)io + 0x1c + 3);
-//        if (status & 0x2000000) {
         if (status & 0x2) {
-//            ret = status & 0xffffff;
-//            ret = io->spi.spi16;
             unsigned short spi16 = io->spi.spi16;
             ret = ((spi16 & 0xff) << 8) | ((spi16 & 0xff00) >> 8);
             break;
@@ -69,16 +108,30 @@ unsigned int spi_transfer24(unsigned int command_data) {
     }
     return ret;
 }
+#endif
 
-int simu() {
-    io->led = 0xff;
+int whoami() {
     unsigned short ret = 0;
     unsigned short exp;
     exp = 0x33;
     ret = spi_transfer16(0x8f00);
-    io->led = ret;
+#ifdef SPIBB
+#define TYPE "BBWhoami"
+#else
+#define TYPE "Whoami"
+#endif
+    const char *type = TYPE;
     if ((ret & 0xff) != exp) {
-        printf("Bad Whoami %x expected %x\n>", ret, exp);
+        printf("Bad %s %x expected %x\n", type, ret, exp);
+        return 1;
+    } else {
+        printf("%s returned %x\n", type, ret);
+        return 0;
+    }
+}
+int sensor_init() {
+    io->led = 0xff;
+    if (whoami()) {
         return -1;
     }
     io->led = 0xfe;
@@ -87,11 +140,30 @@ int simu() {
     spi_transfer16(0x1fc0);
     io->led = 0xfb;
     spi_transfer16(0x2388);
+    return 0;
+}
+unsigned short sensor_read() {
+//    if (sensor_init()) return -1;
+    unsigned short ret = spi_transfer24(0xe80000);
+//    printf("%s: ret=%x\n", __func__, ret);
+    return ret;
+}
+int simu() {
+    if (sensor_init()) {
+        return -1;
+    }
+    unsigned short ret = 0;
+    unsigned short exp;
     exp = 0x9a00;
     for (int i = 0; i < 1000000; i++) {
         //printf("i=%d\n", i);
         io->spi.out_x_l_response = exp;
-        ret = spi_transfer24(0xe80000);
+#ifdef SPIBB
+//        g_out_x_l_response = ((exp & 0xff) << 8) + ((exp & 0xff00) >> 8);
+        g_out_x_l_response = exp;
+#endif
+//        ret = spi_transfer24(0xe80000);
+        ret = sensor_read();
         if (ret != exp) {
             printf("Bad out_x %x expected %x\n>", ret, exp);
             return -1;
@@ -105,30 +177,19 @@ int simu() {
     return 0;
 }
 int sensor() {
-    io->led = 0xff;
-    unsigned short ret = 0;
-    unsigned short exp;
-    exp = 0x33;
-    ret = spi_transfer16(0x8f00);
-    io->led = ret;
-    if ((ret & 0xff) != exp) {
-        printf("Bad Whoami %x expected %x\n>", ret, exp);
+    if (sensor_init()) {
         return -1;
     }
-    io->led = 0xfe;
-    spi_transfer16(0x2077);
-    io->led = 0xfd;
-    spi_transfer16(0x1fc0);
-    io->led = 0xfb;
-    spi_transfer16(0x2388);
     printf("Reading OUT_X.. (press a key to stop)\n");
+    unsigned char accmin = 0, accmax = 0;
+    unsigned char oldval = -1;
     while (1) {
         if (io->uart.stat&2) {
             break;
         }
-        ret = spi_transfer24(0xe80000);
+        unsigned short ret = 0;
+        ret = sensor_read();
         unsigned char acc = ((ret & 0xff00) >> 8) + 0x20 * 4;
-        static unsigned char accmin = 0, accmax = 0;
         if (!accmin && !accmax) {
             accmin = acc;
             accmax = acc;
@@ -144,7 +205,6 @@ int sensor() {
         if (!range) range++;
         unsigned char val = (int)(acc - accmin) * 8 / range;
         if (val > 7) val = 7;
-        static unsigned char oldval = -1;
         if (oldval != val) {
             printf("out_x=%x acc=%x min=%x max=%x val=%x\n", ret, acc, accmin, accmax, val);
         }
@@ -153,21 +213,6 @@ int sensor() {
         io->led = led_out;
     }
     return 0;
-}
-int whoami() {
-    io->led = 0x55;
-    unsigned short ret = 0;
-    unsigned short exp;
-    exp = 0x33;
-    ret = spi_transfer16(0x8f00);
-    io->led = ret;
-    if ((ret & 0xff) != exp) {
-        printf("Bad Whoami %x expected %x\n", ret, exp);
-        return 1;
-    } else {
-        printf("Whoami returned %x\n", ret);
-        return 0;
-    }
 }
 int main(void)
 {
@@ -189,13 +234,16 @@ int main(void)
         printf("%d> ",t-t0);
         gets(buffer,sizeof(buffer));
         printf("You entered [%s]\n", buffer);
-        if (!strncmp("whoami", buffer, 6)) {
+        if (!strcmp("whoami", buffer)) {
             whoami();
-        } else if (!strncmp("led", buffer, 3)) {
+        } else if (!strcmp("led", buffer)) {
             printf("led was %x\n", io->led);
             io->led = ~io->led;
-        } else if (!strncmp("sensor", buffer, 6)) {
+        } else if (!strcmp("sensor", buffer)) {
             sensor();
+        } else if (!strcmp("read", buffer)) {
+            unsigned short ret = sensor_read();
+            printf("%s: ret=%x\n", __func__, ret);
         } else if(!strcmp(buffer,"reboot")) {
             printf("rebooting...\n");
             break;

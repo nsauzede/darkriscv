@@ -42,10 +42,10 @@ module darksocv
     input        UART_RXD,  // UART receive line
     output       UART_TXD,  // UART transmit line
 `ifdef SPI
-    output        SPI_SCK,  // SPI clock output
-    output       SPI_MOSI,  // SPI master data output, slave data input
+    inout        SPI_CSN,   // SPI CSN output (active LOW)
+    inout        SPI_SCK,   // SPI clock output
+    inout        SPI_MOSI,  // SPI master data output, slave data input
     input        SPI_MISO,  // SPI master data input, slave data output
-    output        SPI_CSN,  // SPI CSN output (active LOW)
 `endif
 
 `ifdef __SDRAM__
@@ -66,7 +66,7 @@ module darksocv
     output [31:0] LED,       // on-board leds
     input  [31:0] IPORT,
     output [31:0] OPORT,
-    output [3:0] DEBUG      // osciloscope
+    output [3:0]  DEBUG      // osciloscope
 );
 
     // clock and reset
