@@ -43,7 +43,11 @@ module darksocv
     output       UART_TXD,  // UART transmit line
 `ifdef SPI
     output       SPI_CSN,   // SPI CSN output (active LOW)
+`ifdef I2C
+    inout        SPI_SCK,   // SPI clock output ; or I2C clock input/output
+`else
     output       SPI_SCK,   // SPI clock output
+`endif
     inout        SPI_MOSI,  // SPI master data output, slave data input;  or SDI/O (3-wire mode)
     inout        SPI_MISO,  // SPI master data input, slave data output - inout because of local slave stub (simulation)
 `endif
