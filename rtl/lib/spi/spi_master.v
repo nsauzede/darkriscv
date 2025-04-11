@@ -59,7 +59,11 @@ module spi_master #( parameter integer DIV_COEF = 0 ) (
     output              ready,          // Active HIGH when transfer has finished
 
     output              spi_csn,        // SPI CSN output (active LOW)
+`ifdef I2C
+    inout               spi_sck,        // SPI clock output ; or I2C clock input/output
+`else
     output              spi_sck,        // SPI clock output
+`endif
     inout               spi_mosi,       // SPI master output slave input (default 4-wire); or m/s i/o (3-wire enabled)
     input               spi_miso        // SPI master data input, slave data output
 );

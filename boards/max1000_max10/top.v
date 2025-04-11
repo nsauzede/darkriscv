@@ -6,9 +6,13 @@ module top (
     input USER_BTN,
     output [7:0] LED,
 `ifdef SPI
-    inout SEN_SDI,
-    output SEN_SPC,
     output SEN_CS,
+`ifdef I2C
+    inout  SEN_SPC,    // SPI clock output ; or I2C clock input/output
+`else
+    output SEN_SPC,
+`endif
+    inout SEN_SDI,
     input SEN_SDO,
 `endif
     inout [8:1] PIO,

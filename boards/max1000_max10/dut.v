@@ -6,7 +6,11 @@ module dut (
     output tx,
 `ifdef SPI
     output spi_csn,
+`ifdef I2C
+    inout  spi_sck,        // SPI clock output ; or I2C clock input/output
+`else
     output spi_sck,
+`endif
     inout spi_mosi,
     input spi_miso,
 `endif
