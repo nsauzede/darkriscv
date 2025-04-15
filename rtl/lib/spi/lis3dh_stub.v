@@ -43,7 +43,11 @@ module lis3dh_stub (
     output              out_x_l_flag,
 
     input               csn,                    // SPI chip select (active low)
+`ifdef I2C
+    inout               sck,                    // SPI clock ; or I2C clock input/output
+`else
     input               sck,                    // SPI clock
+`endif
     inout               mosi,                   // 4-wire: SPI master out slave in (default/standard)
     output              miso                    // SPI master in slave out
 );

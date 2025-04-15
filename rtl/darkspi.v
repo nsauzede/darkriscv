@@ -81,7 +81,11 @@ module darkspi #(parameter integer DIV_COEF = 0) (
     output        IRQ,          // interrupt req
 
     output        CSN,          // SPI CSN output (active LOW)
+`ifdef I2C
+    inout         SCK,          // SPI clock output ; or I2C clock input/output
+`else
     output        SCK,          // SPI clock output
+`endif
     inout         MOSI,         // SPI master data output, slave data input; or SDI/O (3-wire mode)
     input         MISO,         // SPI master data input, slave data output
 

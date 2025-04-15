@@ -22,3 +22,17 @@ $ ./ser.py "set_bb 1" "bb 7 f b 9 b 9 b 9 b 8 a 9 b 8 a 8 a 8 a 8 a 8 a 8 a 8 a 
 Good BB whoami returned expected 33
 val=80
 ```
+
+# Adafruit lis3dh_simpletest
+The Adafruit LIS3DH simple test (https://github.com/adafruit/Adafruit_LIS3DH) has been adapted to run
+with the darksocv SPI support by the way of the aforementioned `ser.py` Python helper:
+```shell
+$ python3 lis3dh_simpletest.py
+x = -0.075 G, y = -0.015 G, z = 1.024 G
+x = 0.152 G, y = -0.023 G, z = 0.961 G
+x = 0.095 G, y = -0.024 G, z = 0.921 G
+x = 0.119 G, y = -0.036 G, z = 0.984 G
+x = 0.382 G, y = 0.022 G, z = 0.779 G
+x = 1.021 G, y = 0.024 G, z = -0.158 G
+...
+```

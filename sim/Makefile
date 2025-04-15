@@ -60,6 +60,10 @@ SPI3WIRE:=1
 ifdef SPI3WIRE
 ICARUS += -DSPI3WIRE=1
 endif
+I2C:=1
+ifdef I2C
+ICARUS += -DI2C=1
+endif
 DUT:=darksocv
 include cosim.mk
 COSIM_SRC := $(RTLS)

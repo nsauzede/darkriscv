@@ -43,7 +43,11 @@ module spi_master_bb (
     input  [31:0]       OPORT,
 
     output              CSN,    // SPI CSN output (active LOW)
+`ifdef I2C
+    inout               SCK,    // SPI clock output ; or I2C clock input/output
+`else
     output              SCK,    // SPI clock output
+`endif
     inout               MOSI,   // SPI master data output, slave data input; or m/s i/o (3-wire enabled)
     input               MISO    // SPI master data input, slave data output
 );
