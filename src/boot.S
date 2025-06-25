@@ -59,6 +59,8 @@ _uart_boot:
     /* check simulation, skip uart boot */
 
     la  a5,0x40000000
+    li a0,0xa5
+    sw a0,8(a5)
     lb  a0,0(a5)
     beq a0,x0,_normal_boot
 
@@ -72,6 +74,8 @@ _uart_boot:
 
     li  a0,'u'
     call _uart_putchar
+    li a0,0x5a
+    sw a0,8(a5)
 
     li a1,8192000
     la a2,main
@@ -95,6 +99,7 @@ _uart_boot:
 
         li a0,'.'
         call _uart_putchar
+    sw a3,8(a5)
         addi a3,a3,-1
         bgt a3,x0,_uart_boot_loop1
 
@@ -112,6 +117,8 @@ _uart_boot:
 */
 
 _normal_boot:
+    li a0,0x00
+    sw a0,8(a5)
 
 /*
     RLE code start here:

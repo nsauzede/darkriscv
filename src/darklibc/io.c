@@ -92,7 +92,7 @@ void irq_handler(void)
     {
         if(!utimers--)
         {
-            io->led++;
+            //io->led++;
             utimers=99;
         }
         io->irq = IRQ_TIMR;

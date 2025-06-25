@@ -97,7 +97,7 @@ $(VCDS): $(XSIM)
 	@echo finish |                                          \
 	awk '/^`define __TRACE__/{ exit(-1) }' ../rtl/config.vh \
 	&& ./$(XSIM)                                            \
-	|| ./$(XSIM) |                                          \
+	|| echo ./$(XSIM) |                                          \
 	    awk '{  if($$0~/trace:/) {                          \
 	        print > "$(TRCE)";                              \
 	        if($$0~/40000005:/) {                           \
