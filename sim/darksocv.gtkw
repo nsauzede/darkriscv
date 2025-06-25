@@ -1,0 +1,81 @@
+[*]
+[*] GTKWave Analyzer v3.3.123 (w)1999-2025 BSI
+[*] Fri Jun 20 14:11:25 2025
+[*]
+[dumpfile] "darksocv.vcd"
+[dumpfile_mtime] "Fri Jun 20 14:09:15 2025"
+[dumpfile_size] 37870499
+[savefile] "darksocv.gtkw"
+[timestart] 0
+[size] 1920 1006
+[pos] -27 -24
+*-25.443520 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] darksimv.
+[treeopen] darksimv.soc0.
+[sst_width] 261
+[signals_width] 142
+[sst_expanded] 1
+[sst_vpaned_height] 299
+@28
+darksimv.soc0.CLK
+@22
+darksimv.soc0.DEBUG[3:0]
+darksimv.soc0.DTACK2[3:0]
+darksimv.soc0.DTACK3[3:0]
+@28
+darksimv.soc0.ESIMACK
+darksimv.soc0.ESIMREQ
+darksimv.soc0.HLT
+@22
+darksimv.soc0.IADDR[31:0]
+@28
+darksimv.soc0.IDACK
+@22
+darksimv.soc0.IDATA[31:0]
+@28
+darksimv.soc0.IDREQ
+@22
+darksimv.soc0.IODEBUG[3:0]
+darksimv.soc0.IPORT[31:0]
+darksimv.soc0.KDEBUG[3:0]
+darksimv.soc0.LED[31:0]
+darksimv.soc0.OPORT[31:0]
+@28
+darksimv.soc0.PRINT2
+darksimv.soc0.PRINT3
+darksimv.soc0.RES
+darksimv.soc0.SPI_CSN
+@420
+darksimv.soc0.SPI_DIV_COEF
+@28
+darksimv.soc0.SPI_MISO
+darksimv.soc0.SPI_MOSI
+darksimv.soc0.SPI_SCK
+darksimv.soc0.UART_RXD
+darksimv.soc0.UART_TXD
+@22
+darksimv.soc0.XADDR[31:0]
+darksimv.soc0.XATAO[31:0]
+darksimv.soc0.XBE[3:0]
+@28
+darksimv.soc0.XCLK
+darksimv.soc0.XDREQ
+@22
+darksimv.soc0.XDREQMUX[3:0]
+@28
+darksimv.soc0.XRD
+darksimv.soc0.XRES
+darksimv.soc0.XWR
+@22
+darksimv.soc0.iport[31:0]
+darksimv.soc0.oport[31:0]
+darksimv.soc0.out_x_resp[15:0]
+@28
+darksimv.soc0.spi_csn
+darksimv.soc0.spi_miso
+darksimv.soc0.spi_sck
+darksimv.soc0.spihw_csn
+darksimv.soc0.spihw_miso
+darksimv.soc0.spihw_sck
+[pattern_trace] 1
+[pattern_trace] 0

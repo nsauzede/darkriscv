@@ -37,6 +37,10 @@ unsigned csr_test(unsigned,unsigned,unsigned);
 
 int main(void)
 {
+    // big: ELF 32-bit MSB executable,
+    // little: ELF 32-bit LSB executable,
+    printf("io=%x\n", (unsigned)io);
+    //io->led  = 0xa5;    // big: 208: auipc s0,0x2 ; addi s0,s0,-1148 # 1d8c <io> ; lw a5,0(s0) ; li a4,165 ; sw a4,8(a5)
     unsigned t=0,t0=0;
 
     printf("boot0: main@%x stack@%x\n",(unsigned)main,(unsigned)&t);
@@ -205,7 +209,7 @@ int main(void)
                 {
                     if(!utimers--)
                     {
-                        io->led++;
+                        //io->led++;
                         utimers=999999;
                     }
                     io->irq = IRQ_TIMR;

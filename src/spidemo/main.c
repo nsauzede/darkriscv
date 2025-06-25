@@ -326,18 +326,31 @@ int sensor() {
 }
 int main(void)
 {
+    printf((*(char *)(int[]){1})?"little-endian ":             // endian
+                                 "big-endian ");
+    printf("\n");
+    printf("HERE0\n");
     if (!io->board_id) {
+    printf("HERE1\n");
         set_divcoef(0); // set maximal speed for simulation
 #ifdef SPI3WIRE
+    printf("HERE2\n");
         for (int i = 0; i < 2; i++) {
+    printf("HERE3\n");
         set_spi3w(i);
 #endif
-        simu();
+    printf("HERE4\n");
+        //simu();
+    printf("HERE5\n");
 #ifdef SPIBB
+    printf("HERE6\n");
         set_bb(1);
+    printf("HERE7\n");
         simu();
+    printf("HERE8\n");
         set_bb(0);
 #endif
+    printf("HERE9\n");
 #ifdef SPI3WIRE
         }
 #endif
