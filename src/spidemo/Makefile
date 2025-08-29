@@ -52,6 +52,10 @@ SPI3WIRE:=1
 ifdef SPI3WIRE
 CFLAGS += -DSPI3WIRE=1
 endif
+I2C:=1
+ifdef I2C
+CFLAGS += -DI2C=1
+endif
 
 .PHONY: all
 

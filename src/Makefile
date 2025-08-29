@@ -74,6 +74,11 @@ ifdef SPI3WIRE
     CFLAGS += -DSPI3WIRE=1
     ASFLAGS += -DSPI3WIRE=1
 endif
+I2C:=1
+ifdef I2C
+    CFLAGS += -DI2C=1
+    ASFLAGS += -DI2C=1
+endif
 endif
 
 DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds $(LIBS) $(APPLICATION)/$(APPLICATION).a

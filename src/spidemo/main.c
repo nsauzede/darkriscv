@@ -387,6 +387,29 @@ int main(void)
             } else if (!strcmp("read", argv[0])) {
                 unsigned short ret = sensor_read();
                 printf("%s: ret=%x\n", __func__, ret);
+            } else if (!strcmp("t16", argv[0])) {
+                if (argc == 3) {
+                    unsigned char a = xtoi(argv[1]);
+                    unsigned char b = xtoi(argv[2]);
+                    unsigned short command_data = ((unsigned short)a << 8) | b;
+                    //printf("%s: command_data=%x ret=%x\n", __func__, command_data, ret);
+                    unsigned short ret = spi_transfer16(command_data);
+                    a = ret >> 8;
+                    b = ret & 0xff;
+                    printf("%x %x\n", a, b);
+                }
+            } else if (!strcmp("t24", argv[0])) {
+                if (argc == 4) {
+                    unsigned char a = xtoi(argv[1]);
+                    unsigned char b = xtoi(argv[2]);
+                    unsigned char c = xtoi(argv[2]);
+                    unsigned int command_data = ((unsigned int)a << 16) | (((unsigned int)b << 8)) | c;
+                    unsigned int ret = spi_transfer24(command_data);
+                    a = (ret & 0xff0000) >> 16;
+                    b = (ret & 0xff00) >> 8;
+                    c = ret & 0xff;
+                    printf("%x %x %x\n", a, b, c);
+                }
 #ifdef SPIBB
             } else if (!strcmp("bb", argv[0])) {
 #define BBMAX NARGS
