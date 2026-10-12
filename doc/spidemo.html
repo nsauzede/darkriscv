@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPI on DarkRISCV</title>
+<style>
+/* Layout: a datasheet column; the block diagram and waveforms break out to the full measure. */
+:root {
+  --paper: #F2F3EE;
+  --surface: #FCFCF9;
+  --ink: #17212A;
+  --ink-2: #46515D;
+  --muted: #69737C;
+  --rule: #D7DBD2;
+  --grid: #E3E6DE;
+  --hw: #03704A;
+  --bb: #BD8034;
+  --hw-wash: rgba(3, 112, 74, .07);
+  --bb-wash: rgba(189, 128, 52, .09);
+  --accent: #03704A;
+  --code-bg: #ECEEE7;
+  --del: #A33A2B;
+  --add: #03704A;
+  --del-bg: rgba(163, 58, 43, .08);
+  --add-bg: rgba(3, 112, 74, .09);
+  --graticule: rgba(23, 33, 42, .055);
+  --term-bg: #10161B;
+  --term-fg: #CFE8D9;
+  --term-prompt: #7FD3A6;
+  --f-display: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --measure: 70ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F1317; --surface: #171C21; --ink: #E3E7E1; --ink-2: #B4BCB5; --muted: #8E978F;
+    --rule: #2B333A; --grid: #242B32; --hw: #3FAF7E; --bb: #D59A57;
+    --hw-wash: rgba(63, 175, 126, .10); --bb-wash: rgba(213, 154, 87, .11);
+    --accent: #5CC493; --code-bg: #1C2228; --del: #E58B7C; --add: #5CC493;
+    --del-bg: rgba(229, 139, 124, .11); --add-bg: rgba(92, 196, 147, .11);
+    --graticule: rgba(227, 231, 225, .045);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F1317; --surface: #171C21; --ink: #E3E7E1; --ink-2: #B4BCB5; --muted: #8E978F;
+  --rule: #2B333A; --grid: #242B32; --hw: #3FAF7E; --bb: #D59A57;
+  --hw-wash: rgba(63, 175, 126, .10); --bb-wash: rgba(213, 154, 87, .11);
+  --accent: #5CC493; --code-bg: #1C2228; --del: #E58B7C; --add: #5CC493;
+  --del-bg: rgba(229, 139, 124, .11); --add-bg: rgba(92, 196, 147, .11);
+  --graticule: rgba(227, 231, 225, .045);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; }
+a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+code, .mono { font-family: var(--f-mono); font-size: .86em; }
+p code, li code, td code { background: var(--code-bg); padding: .08em .35em; border-radius: 3px; overflow-wrap: anywhere; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--graticule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graticule) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+.masthead .wrap { padding-block: 52px 36px; display: grid; gap: 22px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); display: flex; flex-wrap: wrap; gap: 6px 14px; }
+h1, h2, h3 { font-family: var(--f-display); font-stretch: condensed; font-weight: 700; line-height: 1.05; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.6rem, 6.4vw, 4.6rem); letter-spacing: -.005em; }
+.lede { font-size: 1.12rem; color: var(--ink-2); max-width: var(--measure); margin: 0; }
+.facts { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); overflow: hidden; width: max-content; max-width: 100%; }
+.facts div { padding: 10px 18px; border-right: 1px solid var(--rule); display: grid; min-width: 0; }
+.facts div:last-child { border-right: 0; }
+.facts b { font-weight: 600; font-size: 1.35rem; line-height: 1.2; }
+.facts span { font-size: 12.5px; color: var(--muted); }
+
+.toc { border-bottom: 1px solid var(--rule); background: var(--surface); }
+.toc ol { list-style: none; margin: 0; padding-block: 12px; display: flex; flex-wrap: wrap; gap: 6px 22px; counter-reset: toc; }
+.toc li { counter-increment: toc; font-size: 14px; }
+.toc li::before { content: counter(toc, decimal-leading-zero); font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-right: 6px; }
+.toc a { color: var(--ink); text-decoration: none; }
+.toc a:hover { color: var(--accent); text-decoration: underline; }
+
+section { padding-block: 52px 8px; scroll-margin-top: 12px; }
+.sec-head { display: grid; gap: 8px; margin-bottom: 24px; }
+.sec-head .tag { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h2 { font-size: clamp(1.9rem, 3.6vw, 2.6rem); text-transform: uppercase; letter-spacing: .01em; }
+.sec-head p { margin: 0; color: var(--ink-2); max-width: var(--measure); }
+h3 { font-size: 1.4rem; letter-spacing: .005em; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px 40px; align-items: start; }
+.cols > * { min-width: 0; }
+.cols p, .prose p { margin: 0 0 .85em; color: var(--ink-2); }
+.prose { max-width: var(--measure); }
+
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 18px; }
+.cap { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 13px; color: var(--ink-2); margin-top: 12px; }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; margin-right: 7px; vertical-align: 3px; }
+
+/* block diagram */
+.diagram-wrap { overflow-x: auto; }
+.diagram { display: block; width: 100%; min-width: 760px; height: auto; }
+.diagram text { font-family: var(--f-body); fill: var(--ink); }
+.diagram .bt { font-family: var(--f-display); font-stretch: condensed; font-weight: 700; font-size: 19px; }
+.diagram .bs { font-size: 12.5px; fill: var(--ink-2); }
+.diagram .off { font-family: var(--f-mono); font-size: 12px; fill: var(--muted); }
+.diagram .pin { font-family: var(--f-mono); font-size: 12px; font-weight: 500; fill: var(--ink); }
+.diagram .note { font-family: var(--f-mono); font-size: 11.5px; fill: var(--muted); }
+.diagram .blk { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.2; }
+.diagram .frame { fill: var(--paper); stroke: var(--ink-2); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.diagram .row { fill: var(--surface); stroke: var(--rule); stroke-width: 1; }
+.diagram .row.hw, .diagram .blk.hw { fill: var(--hw-wash); stroke: var(--hw); stroke-width: 1.6; }
+.diagram .row.bb, .diagram .blk.bb { fill: var(--bb-wash); stroke: var(--bb); stroke-width: 1.6; }
+.diagram .mux { fill: var(--surface); stroke: var(--ink); stroke-width: 1.4; }
+.diagram .rail { fill: var(--ink); }
+.diagram .wire { stroke: var(--ink-2); stroke-width: 1.6; fill: none; }
+.diagram .wire.hw { stroke: var(--hw); stroke-width: 2.2; }
+.diagram .wire.bb { stroke: var(--bb); stroke-width: 2.2; }
+.diagram .wire.sel { stroke: var(--bb); stroke-width: 1.4; stroke-dasharray: 4 3; }
+.diagram .ah { fill: var(--ink-2); }
+.diagram .ah-hw { fill: var(--hw); }
+.diagram .ah-bb { fill: var(--bb); }
+
+/* register */
+.reg { display: grid; gap: 8px; }
+.reg-row { display: grid; grid-template-columns: 60px repeat(4, minmax(0, 1fr)); gap: 2px; }
+.reg-row .rw { font-family: var(--f-mono); font-size: 12px; color: var(--muted); align-self: center; }
+.reg-row .bf { background: var(--code-bg); padding: 8px 9px 7px; border-radius: 3px; min-width: 0; }
+.reg-row .bf.span2 { grid-column: span 2; }
+.bits { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); display: block; }
+.what { font-size: 13px; font-weight: 500; line-height: 1.3; display: block; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 13px; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl-wrap { overflow-x: auto; }
+
+pre { margin: 0; background: var(--code-bg); border-radius: 5px; padding: 13px 15px; overflow-x: auto; font-family: var(--f-mono); font-size: 12.8px; line-height: 1.6; color: var(--ink); }
+pre .c { color: var(--muted); }
+pre .d { display: block; background: var(--del-bg); color: var(--del); margin-inline: -15px; padding-inline: 15px; }
+pre .a { display: block; background: var(--add-bg); color: var(--add); margin-inline: -15px; padding-inline: 15px; }
+.term { background: var(--term-bg); color: var(--term-fg); border-radius: 5px; padding: 12px 14px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.55; overflow-x: auto; white-space: pre; margin: 0; }
+.term .p { color: var(--term-prompt); }
+
+/* waveform */
+.wave-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13px; padding: 6px 12px; background: var(--surface); color: var(--ink-2); border: 0; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.wave-wrap { overflow-x: auto; background: var(--code-bg); border-radius: 5px; padding: 10px 6px; }
+.wave { display: block; min-width: 700px; width: 100%; height: auto; }
+.wave text { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-2); }
+.wave .name { font-weight: 500; fill: var(--ink); font-size: 12px; }
+.wave .sig { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.wave .ans { stroke: var(--hw); stroke-width: 2; }
+.wave .hiz { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.wave .dc { fill: var(--grid); }
+.wave .tick { stroke: var(--rule); stroke-width: 1; }
+.wave .brace { fill: none; stroke: var(--muted); stroke-width: 1; }
+
+/* change cards */
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card .meta { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.card p { margin: 0; color: var(--ink-2); }
+.card dl { margin: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 10px; font-size: 15px; }
+.card dt { font-family: var(--f-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding-top: 3px; }
+.card dd { margin: 0; color: var(--ink-2); min-width: 0; }
+
+.st { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
+.st::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--hw); }
+.st.br::before { background: var(--bb); }
+.st.no::before { background: transparent; border: 1.5px solid var(--muted); width: 6px; height: 6px; }
+
+.issues { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.issue { border: 1px solid var(--rule); border-radius: 6px; padding: 18px; background: var(--surface); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.issue h3 { font-size: 1.25rem; }
+.issue p { margin: 0; color: var(--ink-2); font-size: 15px; }
+.issue .next { font-size: 14px; color: var(--ink); }
+.issue .next b { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; margin-right: 6px; }
+
+footer.site { margin-top: 64px; border-top: 1px solid var(--rule); padding-block: 22px 40px; font-size: 13px; color: var(--muted); }
+footer.site p { margin: 0 0 .5em; max-width: 95ch; }
+
+@media (max-width: 900px) {
+  .cols, .cards, .issues { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .masthead .wrap { padding-block: 34px 26px; }
+  .facts { width: auto; }
+  .facts div { flex: 1 1 45%; border-bottom: 1px solid var(--rule); }
+  .reg-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .reg-row .rw { grid-column: 1 / -1; }
+}
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow"><span>darklife/darkriscv</span><span>SoC peripherals</span><span>2025</span></div>
+    <h1>SPI on the DarkRISCV SoC</h1>
+    <p class="lede">An SPI master in the I/O block, a bit-banged alternative driven from software, a 3-wire mode, a model of the sensor for simulation and a Verilator cosimulation. The target is the LIS3DH accelerometer soldered on the Trenz MAX1000 board. The same series of changes fixed the core, widened the GPIO, ported two FPGA boards and added the project's CI.</p>
+    <div class="facts">
+      <div><b>648</b><span>lines of SPI RTL, 4 modules</span></div>
+      <div><b>17 / 20</b><span>pull requests merged</span></div>
+      <div><b>2</b><span>FPGA boards ported</span></div>
+      <div><b>Jan to Apr 2025</b><span>PRs #72 to #92</span></div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <ol>
+      <li><a href="#arch">Architecture</a></li>
+      <li><a href="#reg">Register</a></li>
+      <li><a href="#wave">One transaction</a></li>
+      <li><a href="#masters">Two masters</a></li>
+      <li><a href="#sim">Simulation</a></li>
+      <li><a href="#run">Run it</a></li>
+      <li><a href="#other">Other changes</a></li>
+      <li><a href="#prs">Pull requests</a></li>
+      <li><a href="#issues">Open issues</a></li>
+      <li><a href="#map">Where to look</a></li>
+    </ol>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="arch">
+  <div class="sec-head">
+    <span class="tag">SPI · 1</span>
+    <h2>Architecture</h2>
+    <p>The core reaches the sensor through the bus bridge and the DarkIO block. Two masters can drive the same pins: <code>darkspi</code> in hardware, or software toggling the GPIO output port.</p>
+  </div>
+  <div class="panel">
+    <div class="diagram-wrap">
+      <svg class="diagram" viewBox="0 0 1200 470" role="img" aria-labelledby="dg-t dg-d">
+        <title id="dg-t">SPI datapath in the DarkRISCV SoC</title>
+        <desc id="dg-d">The darkriscv core connects through darkbridge to the darkio block at 0x40000000. Inside darkio, the darkspi register at offset 0x1C wraps spi_master.v. The GPIO output port at offset 0x18 drives spi_master_bb.v, which reports the SDO pin back on the input port at 0x14. A multiplexer selected by oport bit 3 sends CSN and SCK from one master to the pins. The pins CSN, SCK, SDI/O and SDO go to the LIS3DH sensor on the MAX1000 board, or to lis3dh_stub.v in simulation.</desc>
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker>
+          <marker id="ah-hw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-hw"/></marker>
+          <marker id="ah-bb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-bb"/></marker>
+        </defs>
+
+        <rect class="blk" x="20" y="40" width="170" height="84" rx="6"/>
+        <text class="bt" x="36" y="72">darkriscv</text>
+        <text class="bs" x="36" y="94">RV32E core</text>
+        <text class="bs" x="36" y="112">3-stage pipeline</text>
+
+        <line class="wire" x1="105" y1="124" x2="105" y2="176" marker-end="url(#ah)"/>
+
+        <rect class="blk" x="20" y="178" width="170" height="84" rx="6"/>
+        <text class="bt" x="36" y="210">darkbridge</text>
+        <text class="bs" x="36" y="232">bus router</text>
+        <text class="bs" x="36" y="250">L1 caches</text>
+
+        <line class="wire" x1="190" y1="220" x2="238" y2="220" marker-end="url(#ah)"/>
+        <text class="note" x="194" y="210">bus</text>
+
+        <rect class="frame" x="240" y="16" width="330" height="440" rx="8"/>
+        <text class="bt" x="258" y="46">darkio</text>
+        <text class="off" x="552" y="46" text-anchor="end">0x40000000</text>
+
+        <rect class="row" x="258" y="64" width="294" height="40" rx="4"/>
+        <text class="bs" x="272" y="89" style="fill:var(--ink)">UART</text><text class="off" x="540" y="89" text-anchor="end">+0x04</text>
+        <rect class="row" x="258" y="112" width="294" height="40" rx="4"/>
+        <text class="bs" x="272" y="137" style="fill:var(--ink)">LEDs</text><text class="off" x="540" y="137" text-anchor="end">+0x08</text>
+        <rect class="row" x="258" y="160" width="294" height="40" rx="4"/>
+        <text class="bs" x="272" y="185" style="fill:var(--ink)">timers</text><text class="off" x="540" y="185" text-anchor="end">+0x0C +0x10</text>
+        <rect class="row bb" x="258" y="216" width="294" height="40" rx="4"/>
+        <text class="bs" x="272" y="241" style="fill:var(--ink)">GPIO in, iport</text><text class="off" x="540" y="241" text-anchor="end">+0x14</text>
+        <rect class="row bb" x="258" y="264" width="294" height="40" rx="4"/>
+        <text class="bs" x="272" y="289" style="fill:var(--ink)">GPIO out, oport</text><text class="off" x="540" y="289" text-anchor="end">+0x18</text>
+        <rect class="row hw" x="258" y="320" width="294" height="120" rx="4"/>
+        <text class="bt" x="272" y="347" style="font-size:17px">darkspi</text><text class="off" x="540" y="347" text-anchor="end">+0x1C</text>
+        <rect class="blk" x="274" y="360" width="262" height="66" rx="4"/>
+        <text class="bs" x="288" y="384" style="fill:var(--ink);font-weight:600">spi_master.v</text>
+        <text class="bs" x="288" y="406">clock divider, shift register, 3-wire</text>
+
+        <rect class="blk bb" x="640" y="214" width="200" height="98" rx="6"/>
+        <text class="bt" x="656" y="244" style="font-size:17px">spi_master_bb.v</text>
+        <text class="bs" x="656" y="266">pins driven from oport</text>
+        <text class="bs" x="656" y="286">SDO read back on iport[6]</text>
+
+        <line class="wire bb" x1="552" y1="290" x2="638" y2="290" marker-end="url(#ah-bb)"/>
+        <text class="note" x="562" y="282">oport[5:0]</text>
+        <line class="wire bb" x1="640" y1="236" x2="554" y2="236" marker-end="url(#ah-bb)"/>
+        <text class="note" x="574" y="228">SDO</text>
+
+        <polygon class="mux" points="900,226 940,252 940,412 900,438"/>
+        <text class="note" x="920" y="337" text-anchor="middle">mux</text>
+        <line class="wire sel" x1="920" y1="190" x2="920" y2="236"/>
+        <text class="note" x="920" y="182" text-anchor="middle">oport[3] selects</text>
+
+        <line class="wire bb" x1="840" y1="262" x2="898" y2="262" marker-end="url(#ah-bb)"/>
+        <line class="wire hw" x1="536" y1="398" x2="898" y2="398" marker-end="url(#ah-hw)"/>
+
+        <line class="wire" x1="940" y1="276" x2="1006" y2="276" marker-end="url(#ah)"/>
+        <text class="pin" x="950" y="268">CSN</text>
+        <line class="wire" x1="940" y1="316" x2="1006" y2="316" marker-end="url(#ah)"/>
+        <text class="pin" x="950" y="308">SCK</text>
+        <line class="wire" x1="942" y1="356" x2="1006" y2="356" marker-start="url(#ah)" marker-end="url(#ah)"/>
+        <text class="pin" x="950" y="348">SDI/O</text>
+        <line class="wire" x1="1008" y1="396" x2="942" y2="396" marker-end="url(#ah)"/>
+        <text class="pin" x="950" y="388">SDO</text>
+
+        <rect class="rail" x="1008" y="250" width="6" height="168" rx="2"/>
+
+        <line class="wire" x1="1014" y1="262" x2="1048" y2="262"/>
+        <line class="wire" x1="1014" y1="404" x2="1048" y2="404"/>
+        <rect class="blk" x="1048" y="210" width="140" height="102" rx="6"/>
+        <text class="bt" x="1062" y="240">LIS3DH</text>
+        <text class="bs" x="1062" y="262">on the MAX1000</text>
+        <text class="off" x="1062" y="284">L5 J6 J7 K5</text>
+        <text class="off" x="1062" y="302">board build</text>
+        <rect class="blk" x="1048" y="352" width="140" height="102" rx="6"/>
+        <text class="bt" x="1062" y="382" style="font-size:17px">lis3dh_stub.v</text>
+        <text class="bs" x="1062" y="404">sensor model</text>
+        <text class="off" x="1062" y="426">WHO_AM_I = 0x33</text>
+        <text class="off" x="1062" y="444">simulation</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--hw)"></i>hardware master</span>
+      <span><i style="background:var(--bb)"></i>bit-banged master</span>
+      <span><i style="background:var(--ink-2)"></i>shared pins</span>
+    </div>
+    <p class="cap">With <code>SPIBB</code> defined, bit 3 of <code>oport</code> hands CSN and SCK to the bit-banged master. SDI/O is a tristate line: the idle master releases it, and in 3-wire mode it also carries the sensor's answer. In simulation, <code>lis3dh_stub.v</code> sits inside <code>darksocv.v</code> and returns, for OUT_X, the value software writes to <code>oport[31:16]</code>.</p>
+  </div>
+</section>
+
+<section id="reg">
+  <div class="sec-head">
+    <span class="tag">SPI · 2</span>
+    <h2>The register</h2>
+    <p>One 32-bit word at <code>0x4000001C</code>. Writing it starts a transfer; reading it returns the status and the received data. The layout was reworked during the review of PR #86: status and data share one 32-bit word, readable in a single access.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <div class="reg" role="table" aria-label="darkspi register layout">
+        <div class="reg-row" role="row"><span class="rw" role="rowheader">write</span>
+          <span class="bf" role="cell"><span class="bits">31–24</span><span class="what">0x00, or non-zero to configure the master</span></span>
+          <span class="bf" role="cell"><span class="bits">23–16</span><span class="what">command: register, read bit, auto-increment</span></span>
+          <span class="bf span2" role="cell"><span class="bits">15–0</span><span class="what">data to send, or a placeholder for the answer</span></span>
+        </div>
+        <div class="reg-row" role="row"><span class="rw" role="rowheader">read</span>
+          <span class="bf" role="cell"><span class="bits">31–24</span><span class="what">status: bit 25 ready, bit 24 busy</span></span>
+          <span class="bf" role="cell"><span class="bits">23–16</span><span class="what">0x00</span></span>
+          <span class="bf span2" role="cell"><span class="bits">15–0</span><span class="what">data received, bytes swapped</span></span>
+        </div>
+      </div>
+      <div class="tbl-wrap" style="margin-top:18px">
+        <table>
+          <thead><tr><th>Access</th><th>Byte enables</th><th>Effect</th></tr></thead>
+          <tbody>
+            <tr><td>16-bit write</td><td><code>0011</code></td><td>16-bit transfer: command and one data byte</td></tr>
+            <tr><td>32-bit write, top byte 0</td><td><code>1111</code></td><td>24-bit transfer: command and two data bytes</td></tr>
+            <tr><td>32-bit write <code>0x8080nnnn</code></td><td><code>1111</code></td><td>set the clock divider to <code>nnnn</code> (default 10000)</td></tr>
+            <tr><td>32-bit write <code>0x81010000</code></td><td><code>1111</code></td><td>3-wire mode on; <code>0x81000000</code> back to 4-wire</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+<pre><span class="c">// read OUT_X_L and OUT_X_H in one 24-bit transfer
+// 0xE8 = register 0x28 | read (0x80) | auto-increment (0x40)</span>
+*((volatile int *)SPI_MMADDR) = 0x00e80000;
+short swapped_out_x = *((volatile short *)SPI_MMADDR);   <span class="c">// 0xLOHI</span>
+
+<span class="c">// read WHO_AM_I (0x0F) in one 16-bit transfer</span>
+*((volatile short *)SPI_MMADDR) = 0x8f00;
+char who_am_i = *((volatile char *)SPI_MMADDR) &amp; 0xff;    <span class="c">// 0x33</span></pre>
+      <p class="cap">From the comment block at the top of <code>rtl/darkspi.v</code>.</p>
+      <p style="margin-top:14px">The spidemo firmware brings the sensor up with four transfers: <code>0x8F00</code> checks WHO_AM_I, <code>0x2077</code> sets CTRL_REG1 to 400 Hz with X, Y and Z on, <code>0x1FC0</code> enables the temperature ADC, and <code>0x2388</code> sets CTRL_REG4 to block data update and high resolution. In 3-wire mode, bit 0 of CTRL_REG4 (SIM) is set as well, so the sensor answers on SDI.</p>
+    </div>
+  </div>
+</section>
+
+<section id="wave">
+  <div class="sec-head">
+    <span class="tag">SPI · 3</span>
+    <h2>One transaction</h2>
+    <p>Reading WHO_AM_I takes 16 clock cycles: eight command bits out, eight data bits back. The LIS3DH uses SPI mode 3: the clock rests high, data changes on the falling edge and is sampled on the rising edge.</p>
+  </div>
+  <div class="panel">
+    <div class="wave-head">
+      <strong style="font-size:15px">Read of register 0x0F, answer 0x33</strong>
+      <div class="seg" role="group" aria-label="Wiring mode">
+        <button type="button" id="w4" aria-pressed="true">4-wire</button>
+        <button type="button" id="w3" aria-pressed="false">3-wire</button>
+      </div>
+    </div>
+    <div class="wave-wrap"><svg class="wave" id="wavesvg" role="img" aria-label="SPI mode 3 read of register 0x0F returning 0x33"></svg></div>
+    <p class="cap" id="wavecap"></p>
+    <p class="cap">Limits from the datasheet, noted in <code>src/spidemo/SPIBB.md</code>: clock period 100 ns minimum (10 MHz), chip-select setup 5 ns and hold 20 ns, SDI setup 5 ns and hold 15 ns, SDO valid within 50 ns.</p>
+  </div>
+</section>
+
+<section id="masters">
+  <div class="sec-head">
+    <span class="tag">SPI · 4</span>
+    <h2>Two masters, one bus</h2>
+    <p>The bit-banged master exists to check the hardware one independently, on the real sensor, and to try bus mechanics in software before writing RTL. 3-wire mode exercises the same idea I2C needs: one data line used in both directions.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th></th><th>Hardware, darkspi</th><th>Software, SPIBB</th></tr></thead>
+        <tbody>
+          <tr><td>Logic</td><td>state machine in <code>rtl/lib/spi/spi_master.v</code></td><td>C in <code>src/spidemo/main.c</code></td></tr>
+          <tr><td>Pins</td><td>driven by the shift register</td><td><code>oport</code> bits through <code>spi_master_bb.v</code></td></tr>
+          <tr><td>Clock</td><td>system clock divided, divider set at run time</td><td>as fast as the CPU loop allows</td></tr>
+          <tr><td>CPU work</td><td>one write, poll status, one read</td><td>several I/O accesses per bit</td></tr>
+          <tr><td>Build</td><td><code>APPLICATION=spidemo</code></td><td>adds <code>SPIBB=1</code></td></tr>
+        </tbody>
+      </table></div>
+      <p style="margin-top:14px">In 3-wire mode the master drives the command bits on SDI, then puts the line in high impedance for the data phase and samples the sensor on the same pin. <code>mosi_tri</code> (oport bit 4) and <code>rd</code> (oport bit 5) give the bit-banged master the same control.</p>
+    </div>
+    <div>
+      <h3 style="font-size:1.2rem;margin-bottom:8px">Bit-banging from a PC over the UART</h3>
+      <p>The shell command <code>bb</code> writes <code>oport</code> once per hex digit. <code>ser.py</code> sends such commands over the serial port, so a whole SPI exchange can be typed from a PC.</p>
+<pre>./ser.py "set_bb 1" "bb 7 f b 9 b 8 a 8 a 8 a 9 b 9 b 9 b 9 b ..."
+<span class="c">#  bit 3 enable · bit 2 CS · bit 1 clock · bit 0 data
+#  7 = 0111  master disabled, pins released
+#  f = 1111  idle: CS high, clock high
+#  9 = 1001  CS low, clock low,  data 1
+#  b = 1011  CS low, clock high, data 1   "9 b" sends a 1
+#  8 = 1000  CS low, clock low,  data 0
+#  a = 1010  CS low, clock high, data 0   "8 a" sends a 0</span></pre>
+      <p class="cap">The sequence above sends 1, 0, 0, 0, 1, 1, 1, 1: the command 0x8F of the diagram.</p>
+    </div>
+  </div>
+</section>
+
+<section id="sim">
+  <div class="sec-head">
+    <span class="tag">SPI · 5</span>
+    <h2>Simulation</h2>
+    <p>The SPI path is tested without hardware, in two simulators.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <h3 style="font-size:1.2rem;margin-bottom:8px">Icarus Verilog and a sensor model</h3>
+      <p><code>lis3dh_stub.v</code> decodes the command byte like the real chip: it answers 0x33 to WHO_AM_I and, for OUT_X, returns the 16-bit value that software placed on <code>oport[31:16]</code>. In simulation the spidemo firmware runs itself as a test: it sets an expected value, reads it back through SPI, compares, and repeats for each master and for 4-wire and 3-wire. It prints <code>Test OK.</code> or <code>Bad out_x</code>, then a <code>&gt;</code> that ends the simulation.</p>
+      <p>The firmware sets the divider to its minimum in simulation: at the default of 10000, a single transfer would take hundreds of thousands of clock cycles. <code>rtl/lib/spi/darksocv.gtkw</code> opens GTKWave on the SPI signals.</p>
+    </div>
+    <div>
+      <h3 style="font-size:1.2rem;margin-bottom:8px">Verilator and ImGui</h3>
+      <p>Verilator compiles the RTL into a C++ model. <code>sim/Vdarksocv_gui.cpp</code> drives it from an ImGui window with Run, Step, AutoStep and Reset, a clock checkbox and the LED register. Serial output through the model is slow, so <code>NOBANNER=1</code> skips the boot banner.</p>
+<pre><span class="c">// sim/Vdarksocv_gui.cpp</span>
+ImGui::Checkbox("Run", &amp;run);
+ImGui::SameLine(); if (ImGui::Button("Step")) { step = 2; }
+ImGui::SliderInt("StepTime", &amp;step_time, 1, 10);
+ImGui::Checkbox("clk", &amp;clk);
+ImGui::SameLine(); if (ImGui::Button("Reset")) { reset = true; }
+ImGui::Text("LED %08lX", (unsigned long)darksocv-&gt;LED);</pre>
+    </div>
+  </div>
+</section>
+
+<section id="run">
+  <div class="sec-head">
+    <span class="tag">SPI · 6</span>
+    <h2>Run it</h2>
+    <p>From the repository root. A rebuild needs a RISC-V cross compiler, named by <code>CROSS</code> and <code>CCPATH</code> in <code>src/config.mk</code> or on the command line.</p>
+  </div>
+  <div class="cols">
+    <div>
+<pre><span class="c"># simulation, Icarus Verilog</span>
+make clean all APPLICATION=spidemo
+gtkwave rtl/lib/spi/darksocv.gtkw &amp;
+
+<span class="c"># cosimulation, Verilator and ImGui</span>
+make clean all APPLICATION=spidemo NOBANNER=1 SPIBB=1 COSIM=1
+
+<span class="c"># MAX1000 board, Quartus</span>
+make clean all BOARD=max1000_max10 APPLICATION=spidemo
+make install BOARD=max1000_max10
+screen /dev/ttyUSB0 115200</pre>
+      <p class="cap">On the branch this page sits on, <code>SPIBB</code> is commented out in the three makefiles and the build is little-endian. The committed <code>src/darksocv.mem</code> is still the big-endian image, so use <code>clean all</code> to rebuild it.</p>
+    </div>
+    <div>
+      <p>On the board, the shell's <code>sensor</code> command reads OUT_X in a loop and lights one of the eight LEDs according to the tilt, rescaling as it sees new minimum and maximum values. <code>whoami</code>, <code>spi16</code>, <code>iport</code>, <code>oport</code> and <code>bb</code> give direct access to the bus.</p>
+<pre class="term"><span class="p">10335&gt;</span> sensor
+out_x=0f10
+out_x=0f10
+out_x=0ef0
+out_x=0ef0
+out_x=0ef0
+out_x=0f60</pre>
+      <p class="cap">The X axis on the MAX1000, from <code>boards/max1000_max10/README.md</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="other">
+  <div class="sec-head">
+    <span class="tag">Beyond SPI</span>
+    <h2>Other changes</h2>
+    <p>What each change did, why, and how.</p>
+  </div>
+  <div class="cards">
+    <article class="card">
+      <span class="meta">Core · PR #76</span>
+      <h3>A hold value in the decoder</h3>
+      <dl>
+        <dt>What</dt><dd>The execute stage decodes the opcode into one-bit flags. While <code>HLT</code> stalls the pipeline, each flag must keep its value; <code>XCUS</code> (custom opcode) was loaded with <code>XRCC</code> (register operation) instead.</dd>
+        <dt>How</dt><dd>One character. Found by reading the line against its neighbours.</dd>
+      </dl>
+<pre>XRCC   &lt;= HLT ? XRCC   : IDATAX[6:0]==`RCC;
+<span class="d">- XCUS   &lt;= HLT ? XRCC   : IDATAX[6:0]==`CUS;</span><span class="a">+ XCUS   &lt;= HLT ? XCUS   : IDATAX[6:0]==`CUS;</span></pre>
+    </article>
+
+    <article class="card">
+      <span class="meta">I/O · PR #85</span>
+      <h3>Byte lanes on the LED register</h3>
+      <dl>
+        <dt>What</dt><dd>A one-byte store to the 16-bit LED register also overwrote the upper eight LEDs.</dd>
+        <dt>How</dt><dd>Honour the byte enables <code>XBE</code>: on <code>0001</code>, write the low byte and keep the high one.</dd>
+      </dl>
+<pre><span class="d">- 5'b01000: LEDFF &lt;= XATAI[15:0];</span><span class="a">+ 5'b01000: LEDFF &lt;= XBE == 4'b0001 ? {LEDFF[15:8], XATAI[7:0]}</span><span class="a">+                                    : XATAI[15:0];</span></pre>
+    </article>
+
+    <article class="card">
+      <span class="meta">I/O · PRs #82 and #88</span>
+      <h3>Wider LEDs and GPIO</h3>
+      <dl>
+        <dt>What</dt><dd>16 LEDs, then the LED and output port widened to 32 bits, and the GPIO input and output ports brought out of <code>darkio</code> to the top level.</dd>
+        <dt>Use</dt><dd>The bit-banged SPI master drives its pins from <code>oport</code> and reads SDO back on <code>iport</code>.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <span class="meta">Core · PR #72 · Toolchain · PR #73</span>
+      <h3>Two build fixes</h3>
+      <dl>
+        <dt>What</dt><dd>The Harvard build declared four cache wires twice in <code>darkbridge.v</code>; an <code>`ifndef __HARVARD__</code> guard removes the duplicates. Recent GCC moved CSR instructions into the Zicsr extension, so <code>-march=rv32e</code> became <code>rv32e_zicsr</code>.</dd>
+        <dt>Why</dt><dd>Neither build went through: the Harvard configuration on the duplicate declarations, the firmware on CSR instructions that RV32E without Zicsr no longer accepts.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <span class="meta">Board · PR #80</span>
+      <h3>Trenz MAX1000, Intel MAX10</h3>
+      <dl>
+        <dt>What</dt><dd>A 10M08 FPGA with 8 LEDs, a 12 MHz oscillator, SDRAM and the LIS3DH. The SoC uses about 40% of the logic.</dd>
+        <dt>How</dt><dd>A board <code>top.v</code>, a vendor PLL from 12 to 32 MHz, and a RAM wrapper around <code>altsyncram</code> so Quartus infers block RAM. The generic <code>darkram</code> worked only with the <code>__RMW_CYCLE__</code> workaround.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <span class="meta">Board · PR #81</span>
+      <h3>Terasic DE10-Nano under MiSTer</h3>
+      <dl>
+        <dt>What</dt><dd>A Cyclone V 5CSEBA6 with 110K logic elements. The SoC and the MiSTer framework take about 10% of it.</dd>
+        <dt>How</dt><dd>The core runs inside the MiSTer framework; the bitstream is loaded from the MiSTer menu and the console reached over ssh with <code>screen /dev/ttyS1 115200</code>.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <span class="meta">Build · PRs #74 and #75</span>
+      <h3>Firmware build and CI</h3>
+      <dl>
+        <dt>What</dt><dd>Standard <code>CFLAGS</code>, missing headers in CoreMark and a missing <code>size_t</code>. Then a GitHub Actions workflow, the project's only CI.</dd>
+        <dt>How</dt><dd>An Arch Linux container installs Icarus Verilog and a riscv32 toolchain, simulates the committed image, rebuilds everything and simulates again, on every push and pull request.</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <span class="meta">Branches only</span>
+      <h3>Prototypes that did not land</h3>
+      <dl>
+        <dt>I2C</dt><dd>Bit-banging, an I2C master in Verilog and an I2C model of the LIS3DH, with a hand-drawn WHO_AM_I exchange: start, address, acknowledge, repeated start, stop.</dd>
+        <dt>Other</dt><dd>An ADXL345 model for the DE10-Nano's accelerometer, a UART queue for simulation, and Papilio and Spartan-3 boards under Xilinx ISE.</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<section id="prs">
+  <div class="sec-head">
+    <span class="tag">History</span>
+    <h2>Pull requests</h2>
+    <p>Every pull request to <code>darklife/darkriscv</code> in the series, in order.</p>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Opened</th><th>PR</th><th>Change</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td class="num">2025-01-07</td><td>#72</td><td>Do not duplicate cache signals in Harvard mode</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-01-08</td><td>#73</td><td>Fix rv32e mem build with recent gcc</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-02-08</td><td>#74</td><td>Fix src build</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-02-08</td><td>#75</td><td>Add Linux Github Actions</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-02-09</td><td>#76</td><td>Fix XCUS to retain its actual value</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-02-09</td><td>#77</td><td>Remove 'x' perm for non-executables</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-02-09</td><td>#78</td><td>Remove trailing spaces, 90 files</td><td><span class="st no">closed: kept file history intact</span></td></tr>
+        <tr><td class="num">2025-02-09</td><td>#79</td><td>Fix CI URLs</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-02-26</td><td>#80</td><td>Add new board MAX1000 w/ Intel MAX10</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-03-06</td><td>#81</td><td>Add new board DE10-Nano w/ Intel Cyclone V (MiSTer)</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-03-07</td><td>#82</td><td>Extend darksocv/darkio to 16-leds</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-03-19</td><td>#85</td><td>Fix leds byte access</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-03-19</td><td>#86</td><td>Add darkspi SPI master to darkio, request for comments</td><td><span class="st">merged after two review rounds</span></td></tr>
+        <tr><td class="num">2025-03-23</td><td>#87</td><td>Enhance spidemo</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-03-24</td><td>#88</td><td>Improve GPIOs</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-03-30</td><td>#89</td><td>Cleanup SPI, add bitbanging</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-04-03</td><td>#90</td><td>Add early verilator+imgui cosim support</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-04-06</td><td>#91</td><td>Enhance Bit-Banging support</td><td><span class="st no">closed: folded into #92</span></td></tr>
+        <tr><td class="num">2025-04-10</td><td>#92</td><td>Enhance SPI, with 3-wire support and more</td><td><span class="st">merged</span></td></tr>
+        <tr><td class="num">2025-06-25</td><td>#102</td><td>Test CI</td><td><span class="st no">closed: a CI trial</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="issues">
+  <div class="sec-head">
+    <span class="tag">State</span>
+    <h2>Open issues</h2>
+    <p>What remains unfinished or known to be weak, with the next step for each.</p>
+  </div>
+  <div class="issues">
+    <div class="issue">
+      <h3>Endianness</h3>
+      <p>Upstream made big-endian the default on May 23, 2025, and returned to little-endian on July 2. The spidemo branch fell back to little-endian with the bit-banged master disabled, and its committed image was not rebuilt.</p>
+      <p class="next"><b>Next</b>rebase on upstream, rebuild the image, re-enable <code>SPIBB</code> and run the self-test in both byte orders.</p>
+    </div>
+    <div class="issue">
+      <h3>The CI cannot fail on a fault</h3>
+      <p>The simulation ends with <code>$finish</code> at the shell prompt and on an invalid instruction alike, and both exit with status 0. The job passes whenever the firmware builds and the RTL compiles.</p>
+      <p class="next"><b>Next</b>fail the job when the log lacks the prompt or holds <code>invalid XIDATA</code>, and add the spidemo self-test.</p>
+    </div>
+    <div class="issue">
+      <h3>I2C</h3>
+      <p>The bit-banged I2C, the I2C master and the sensor model stayed on branches. 3-wire SPI already provides the release-and-sample mechanism that SDA needs.</p>
+      <p class="next"><b>Next</b>an open-drain SDA through <code>oport</code>, checked against the model.</p>
+    </div>
+    <div class="issue">
+      <h3>Cosimulation speed</h3>
+      <p>Serial output through the Verilator model is slow enough that the boot banner had to become optional.</p>
+      <p class="next"><b>Next</b>measure where the time goes: the GUI refresh, tracing, or the clock stepping.</p>
+    </div>
+    <div class="issue">
+      <h3>Board-specific RAM</h3>
+      <p>The MAX10 and Cyclone V ports carry their own <code>altsyncram</code> wrapper and PLL instead of using <code>darkram</code> and <code>darkpll</code>.</p>
+      <p class="next"><b>Next</b>move the Intel branch into <code>rtl/darkram.v</code> and <code>rtl/darkpll.v</code>.</p>
+    </div>
+    <div class="issue">
+      <h3>Repeated switches</h3>
+      <p><code>SPI</code>, <code>SPIBB</code> and <code>SPI3WIRE</code> are set in <code>sim/Makefile</code>, <code>src/Makefile</code> and <code>src/spidemo/Makefile</code> each. Changing one alone builds RTL and firmware that disagree.</p>
+      <p class="next"><b>Next</b>define them once, in <code>src/config.mk</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="map">
+  <div class="sec-head">
+    <span class="tag">Reference</span>
+    <h2>Where to look</h2>
+    <p>Each topic the work touches, and the files where it is concrete.</p>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Topic</th><th>In this project</th><th>Files</th></tr></thead>
+      <tbody>
+        <tr><td>Processor architecture</td><td>Pipeline stages and stalls, RV32E and RV32I, CSRs, caches, Harvard and von Neumann memory</td><td><code>rtl/darkriscv.v</code>, <code>rtl/darkcache.v</code>, <code>rtl/config.vh</code></td></tr>
+        <tr><td>Digital design</td><td>Registers, byte enables, state machines, tristate pins, clock dividers, block RAM inference</td><td><code>rtl/darkio.v</code>, <code>rtl/darkspi.v</code>, <code>rtl/lib/spi/spi_master.v</code></td></tr>
+        <tr><td>Bare-metal software</td><td>Memory-mapped registers, <code>volatile</code>, bit-banging, boot code, linker script</td><td><code>src/darklibc/include/io.h</code>, <code>src/boot.S</code>, <code>src/darksocv.lds</code>, <code>src/spidemo/main.c</code></td></tr>
+        <tr><td>Serial buses</td><td>SPI mode 3, 3-wire half duplex, I2C start, stop and acknowledge</td><td><code>src/spidemo/SPIBB.md</code>, <code>rtl/lib/spi/</code></td></tr>
+        <tr><td>Toolchain</td><td>Cross-compiling, <code>-march</code> and <code>-mabi</code>, the ILP32E ABI, endianness, objcopy to a memory image</td><td><code>src/config.mk</code>, <code>src/Makefile</code></td></tr>
+        <tr><td>Verification</td><td>Device models, self-checking firmware, waveforms, two simulators</td><td><code>sim/</code>, <code>rtl/lib/spi/lis3dh_stub.v</code></td></tr>
+        <tr><td>FPGA flow</td><td>Pin assignment, vendor PLL and RAM, Quartus command line</td><td><code>boards/max1000_max10/</code>, <code>boards/de10nano_cyclonev_mister/</code></td></tr>
+        <tr><td>Continuous integration</td><td>A containerized build and simulation on every push</td><td><code>.github/workflows/Linux.yml</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>Sources: the git history of <span class="mono">darklife/darkriscv</span> and of the fork's branches, pull requests #72 to #102 on GitHub, and the files named above, as they stand on this branch.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  function s(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, str, extra) {
+    var a = { x: x, y: y };
+    for (var k in extra) a[k] = extra[k];
+    var t = s("text", a, parent); t.textContent = str; return t;
+  }
+
+  var svg = document.getElementById("wavesvg");
+  var cap = document.getElementById("wavecap");
+  var b4 = document.getElementById("w4"), b3 = document.getElementById("w3");
+
+  function draw(three) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var U = 20, X0 = 74, T = 38, W = X0 + T * U + 14, H = 252;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    var X = function (t) { return X0 + t * U; };
+    var rows = { csn: 44, sck: 94, sdi: 144, sdo: 194 }, amp = 14;
+    var names = three ? [["CS", "csn"], ["SPC", "sck"], ["SDI/O", "sdi"], ["SDO", "sdo"]]
+                      : [["CS", "csn"], ["SPC", "sck"], ["SDI", "sdi"], ["SDO", "sdo"]];
+    names.forEach(function (nm) { txt(svg, 4, rows[nm[1]] + 4, nm[0], { "class": "name" }); });
+    for (var i = 0; i < 16; i++) s("line", { x1: X(4 + 2 * i), x2: X(4 + 2 * i), y1: 74, y2: 212, "class": "tick" }, svg);
+
+    function level(row, segs, cls) {
+      var d = "", yHi = rows[row] - amp, yLo = rows[row] + amp, prev = null;
+      segs.forEach(function (sg) {
+        var yv = sg[2] ? yHi : yLo;
+        if (prev === null) d += "M" + X(sg[0]) + "," + yv;
+        else if (prev !== yv) d += "L" + X(sg[0]) + "," + yv;
+        d += "L" + X(sg[1]) + "," + yv; prev = yv;
+      });
+      return s("path", { d: d, "class": "sig" + (cls ? " " + cls : "") }, svg);
+    }
+    level("csn", [[0, 2, 1], [2, 36, 0], [36, T, 1]]);
+    var ck = [[0, 3, 1]];
+    for (i = 0; i < 16; i++) { ck.push([3 + 2 * i, 4 + 2 * i, 0]); ck.push([4 + 2 * i, 5 + 2 * i, 1]); }
+    ck.push([35, T, 1]);
+    level("sck", ck);
+
+    var cmd = [1, 0, 0, 0, 1, 1, 1, 1], ans = [0, 0, 1, 1, 0, 0, 1, 1];
+    var cmdLab = ["RW", "MS", "0", "0", "1", "1", "1", "1"];
+    var sdi = [[0, 3, 1]];
+    cmd.forEach(function (b, k) { sdi.push([3 + 2 * k, 5 + 2 * k, b]); });
+    level("sdi", sdi);
+    cmd.forEach(function (b, k) { txt(svg, X(4 + 2 * k), rows.sdi - amp - 6, cmdLab[k], { "text-anchor": "middle" }); });
+
+    var answer = [];
+    ans.forEach(function (b, k) { answer.push([19 + 2 * k, 21 + 2 * k, b]); });
+    var ansRow = three ? "sdi" : "sdo";
+    if (three) {
+      level("sdi", answer, "ans");
+      level("sdi", [[35, T, 1]]);
+      s("line", { x1: X(0), x2: X(T), y1: rows.sdo, y2: rows.sdo, "class": "hiz" }, svg);
+      txt(svg, X(0.2), rows.sdo - 6, "unused");
+    } else {
+      s("rect", { x: X(19), y: rows.sdi - amp, width: X(35) - X(19), height: 2 * amp, "class": "dc" }, svg);
+      txt(svg, (X(19) + X(35)) / 2, rows.sdi + 4, "don't care", { "text-anchor": "middle" });
+      level("sdi", [[35, T, 1]]);
+      s("line", { x1: X(0), x2: X(19), y1: rows.sdo, y2: rows.sdo, "class": "hiz" }, svg);
+      level("sdo", answer, "ans");
+      s("line", { x1: X(35), x2: X(T), y1: rows.sdo, y2: rows.sdo, "class": "hiz" }, svg);
+      txt(svg, X(0.2), rows.sdo - 6, "released");
+    }
+    ans.forEach(function (b, k) { txt(svg, X(20 + 2 * k), rows[ansRow] - amp - 6, String(b), { "text-anchor": "middle" }); });
+
+    function brace(t0, t1, yb, label) {
+      s("path", { d: "M" + X(t0) + "," + (yb - 5) + "V" + yb + "H" + X(t1) + "V" + (yb - 5), "class": "brace" }, svg);
+      txt(svg, (X(t0) + X(t1)) / 2, yb + 14, label, { "text-anchor": "middle" });
+    }
+    brace(3, 19, 226, "master: command 0x8F, read register 0x0F");
+    brace(19, 35, 226, three ? "sensor, same pin: 0x33" : "sensor: answer 0x33");
+    txt(svg, X(3), 16, "16 cycles, sampled on each rising clock edge");
+
+    cap.textContent = three
+      ? "3-wire: the master drives SDI/O for the command, then releases it; the sensor answers on the same pin, and SDO is unused."
+      : "4-wire: the master drives SDI, the sensor answers on SDO. SDI is ignored during the data phase.";
+    b4.setAttribute("aria-pressed", three ? "false" : "true");
+    b3.setAttribute("aria-pressed", three ? "true" : "false");
+  }
+  b4.addEventListener("click", function () { draw(false); });
+  b3.addEventListener("click", function () { draw(true); });
+  draw(false);
+})();
+</script>
+</body>
+</html>
