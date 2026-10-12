@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DarkRISCV Logbook</title>
+<style>
+/* Layout: a datasheet column with a date gutter; figures and diagrams break out to the full measure. */
+:root {
+  --paper: #F2F3EE;
+  --surface: #FCFCF9;
+  --ink: #17212A;
+  --ink-2: #46515D;
+  --muted: #69737C;
+  --rule: #D7DBD2;
+  --grid: #E3E6DE;
+  --track: #E4E7DF;
+  --merged: #03704A;
+  --branch: #BD8034;
+  --accent: #03704A;
+  --code-bg: #ECEEE7;
+  --del: #A33A2B;
+  --add: #03704A;
+  --del-bg: rgba(163, 58, 43, .08);
+  --add-bg: rgba(3, 112, 74, .09);
+  --graticule: rgba(23, 33, 42, .055);
+  --f-display: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --measure: 68ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F1317; --surface: #171C21; --ink: #E3E7E1; --ink-2: #B4BCB5; --muted: #8E978F;
+    --rule: #2B333A; --grid: #242B32; --track: #262D34; --merged: #0E7C50; --branch: #C68539;
+    --accent: #5CC493; --code-bg: #1C2228; --del: #E58B7C; --add: #5CC493;
+    --del-bg: rgba(229, 139, 124, .11); --add-bg: rgba(92, 196, 147, .11);
+    --graticule: rgba(227, 231, 225, .045);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F1317; --surface: #171C21; --ink: #E3E7E1; --ink-2: #B4BCB5; --muted: #8E978F;
+  --rule: #2B333A; --grid: #242B32; --track: #262D34; --merged: #0E7C50; --branch: #C68539;
+  --accent: #5CC493; --code-bg: #1C2228; --del: #E58B7C; --add: #5CC493;
+  --del-bg: rgba(229, 139, 124, .11); --add-bg: rgba(92, 196, 147, .11);
+  --graticule: rgba(227, 231, 225, .045);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+img { max-width: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:focus-visible, [tabindex]:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+code, kbd, .mono { font-family: var(--f-mono); font-size: .86em; }
+p code, li code, td code { background: var(--code-bg); padding: .08em .35em; border-radius: 3px; overflow-wrap: anywhere; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; }
+
+/* masthead */
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--graticule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graticule) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+.masthead .wrap { padding-block: 56px 40px; display: grid; gap: 28px; }
+.eyebrow {
+  font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent); display: flex; flex-wrap: wrap; gap: 6px 14px;
+}
+h1, h2, h3 { font-family: var(--f-display); font-stretch: condensed; font-weight: 700; line-height: 1.05; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.5rem, 6.2vw, 4.4rem); letter-spacing: -.005em; max-width: 16ch; }
+h1 em { font-style: normal; color: var(--accent); }
+.lede { font-size: 1.14rem; color: var(--ink-2); max-width: var(--measure); margin: 0; }
+.provenance { font-size: 13px; color: var(--muted); margin: 0; }
+
+/* figures */
+.figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.fig { background: var(--surface); padding: 18px 18px 16px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.fig.hero { grid-column: span 2; grid-row: span 2; padding: 22px; align-content: space-between; }
+.fig .v { font-weight: 600; font-size: 2rem; line-height: 1.1; letter-spacing: -.01em; }
+.fig.hero .v { font-size: clamp(3.2rem, 7vw, 4.6rem); }
+.fig .v small { font-size: .5em; font-weight: 500; color: var(--muted); margin-left: .15em; }
+.fig .l { font-size: 14px; color: var(--ink-2); }
+.fig .s { font-size: 12.5px; color: var(--muted); }
+.meter { display: flex; gap: 2px; height: 10px; margin-top: 14px; }
+.meter span { flex: 1; border-radius: 2px; background: var(--merged); }
+.meter span.x { background: var(--track); }
+.fig.hero .key { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+
+/* nav */
+.toc { border-bottom: 1px solid var(--rule); background: var(--surface); }
+.toc ol { list-style: none; margin: 0; padding-block: 12px; display: flex; flex-wrap: wrap; gap: 6px 22px; counter-reset: toc; }
+.toc li { counter-increment: toc; font-size: 14px; }
+.toc li::before { content: counter(toc, decimal-leading-zero); font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-right: 6px; }
+.toc a { color: var(--ink); text-decoration: none; }
+.toc a:hover { color: var(--accent); text-decoration: underline; }
+
+/* sections */
+section { padding-block: 56px 8px; scroll-margin-top: 12px; }
+.sec-head { display: grid; gap: 8px; margin-bottom: 28px; }
+.sec-head .tag { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h2 { font-size: clamp(1.9rem, 3.6vw, 2.6rem); text-transform: uppercase; letter-spacing: .01em; }
+.sec-head p { margin: 0; color: var(--ink-2); max-width: var(--measure); }
+h3 { font-size: 1.45rem; letter-spacing: .005em; }
+.prose { max-width: var(--measure); }
+.prose p { margin: 0 0 1em; }
+
+/* why */
+.why { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+.why > div { min-width: 0; border-top: 2px solid var(--ink); padding-top: 14px; }
+.why h3 { margin-bottom: 10px; }
+.why p { margin: 0 0 .8em; color: var(--ink-2); }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: st; display: grid; gap: 8px; }
+.steps li { counter-increment: st; display: grid; grid-template-columns: 28px 1fr; gap: 6px; color: var(--ink-2); }
+.steps li::before { content: counter(st); font-family: var(--f-mono); font-size: 12px; color: var(--surface); background: var(--ink); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; margin-top: 3px; }
+.steps b { color: var(--ink); font-weight: 600; }
+
+/* timeline */
+.phase { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 0 28px; padding-block: 18px; border-top: 1px solid var(--rule); }
+.phase-label { min-width: 0; }
+.phase-label h3 { font-size: 1.25rem; }
+.phase-label .when { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-top: 4px; }
+.events { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.ev { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; }
+.ev time { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums; }
+.ev .t { font-weight: 600; }
+.ev .n { color: var(--ink-2); font-size: 15px; margin-top: 2px; }
+.chips { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: 6px; vertical-align: 1px; }
+.chip { font-family: var(--f-mono); font-size: 11.5px; line-height: 1; padding: 4px 7px; border: 1px solid var(--rule); border-radius: 999px; color: var(--ink-2); background: var(--surface); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.chip.ok::before { background: var(--merged); }
+.chip.br::before { background: var(--branch); }
+.chip.no::before { background: transparent; border: 1.5px solid var(--muted); width: 5px; height: 5px; }
+.chip.up::before { background: var(--ink); border-radius: 1px; }
+.chip.area::before { display: none; }
+
+/* charts */
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; }
+.chart-title { font-weight: 600; font-size: 15px; }
+.chart-sub { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink-2); margin-top: 12px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.chart { position: relative; margin-top: 10px; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.chart .hit { fill: transparent; cursor: default; }
+.chart .hit:focus { outline: none; }
+.chart .hit:focus-visible { stroke: var(--accent); stroke-width: 1.5px; }
+.chart .slot.on .bar { filter: brightness(1.12); }
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 22px; }
+.notes p { margin: 0; font-size: 15px; color: var(--ink-2); }
+.notes b { color: var(--ink); }
+details.data { margin-top: 14px; font-size: 14px; }
+details.data summary { cursor: pointer; color: var(--accent); width: max-content; }
+.tbl-wrap { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 13px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tip {
+  position: fixed; z-index: 10; pointer-events: none; max-width: 300px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .14); padding: 10px 12px; font-size: 13px; line-height: 1.45;
+}
+.tip .h { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); margin-bottom: 6px; }
+.tip .row { display: flex; align-items: baseline; gap: 8px; }
+.tip .row b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tip .row .k { width: 12px; height: 2px; border-radius: 1px; flex: none; transform: translateY(-3px); }
+.tip ul { margin: 6px 0 0; padding-left: 16px; color: var(--ink-2); }
+
+/* files chart */
+.files { display: grid; gap: 4px; margin-top: 14px; }
+.grp { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 12px; }
+.frow { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 4px 16px; align-items: center; padding: 4px 0; border-radius: 4px; }
+.frow:hover, .frow:focus-visible { background: var(--code-bg); }
+.frow .fname { font-family: var(--f-mono); font-size: 12.5px; overflow-wrap: anywhere; display: flex; justify-content: space-between; gap: 10px; }
+.frow .fname span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fbar { position: relative; height: 12px; }
+.fbar .trk { position: absolute; left: 0; top: 0; bottom: 0; background: var(--track); border-radius: 0 4px 4px 0; }
+.fbar .fil { position: absolute; left: 0; top: 0; bottom: 0; background: var(--merged); border-radius: 0 4px 4px 0; }
+.faxis { position: relative; height: 22px; margin-left: calc(15rem + 16px); border-top: 1px solid var(--rule); margin-top: 6px; }
+.faxis span { position: absolute; top: 4px; transform: translateX(-50%); font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.faxis span:first-child { transform: none; }
+
+/* case studies */
+.cases { display: grid; gap: 22px; }
+.case { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 26px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px 36px; scroll-margin-top: 12px; }
+.case > * { min-width: 0; }
+.case header { grid-column: 1 / -1; display: grid; gap: 6px; }
+.case .num { font-family: var(--f-mono); font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.case h3 { font-size: 1.8rem; }
+.case p { margin: 0 0 .85em; color: var(--ink-2); }
+.case p:last-child { margin-bottom: 0; }
+.case .wide { grid-column: 1 / -1; }
+.lesson { border-left: 3px solid var(--accent); padding: 2px 0 2px 14px; color: var(--ink) !important; font-weight: 500; }
+pre { margin: 0; background: var(--code-bg); border-radius: 5px; padding: 14px 16px; overflow-x: auto; font-family: var(--f-mono); font-size: 12.8px; line-height: 1.6; color: var(--ink); }
+pre .d { display: block; background: var(--del-bg); color: var(--del); margin-inline: -16px; padding-inline: 16px; }
+pre .a { display: block; background: var(--add-bg); color: var(--add); margin-inline: -16px; padding-inline: 16px; }
+pre .c { color: var(--muted); }
+.cap { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
+.reg { display: grid; gap: 10px; }
+.reg-row { display: grid; grid-template-columns: 54px repeat(4, minmax(0, 1fr)); gap: 2px; align-items: stretch; }
+.reg-row .rw { font-family: var(--f-mono); font-size: 12px; color: var(--muted); align-self: center; }
+.reg-row .bf { background: var(--code-bg); padding: 8px 8px 7px; border-radius: 3px; min-width: 0; }
+.reg-row .bf .bits { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); display: block; }
+.reg-row .bf .what { font-size: 13px; font-weight: 500; line-height: 1.3; display: block; }
+.reg-row .bf.span2 { grid-column: span 2; }
+
+.wave-wrap { overflow-x: auto; background: var(--code-bg); border-radius: 5px; padding: 10px 6px; }
+.wave-wrap svg { display: block; min-width: 680px; width: 100%; }
+.wave text { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-2); }
+.wave .sig { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.wave .ans { stroke: var(--accent); }
+.wave .hiz { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.wave .dc { fill: var(--grid); }
+.wave .tick { stroke: var(--rule); stroke-width: 1; }
+.wave .brace { fill: none; stroke: var(--muted); stroke-width: 1; }
+.wave .name { font-weight: 500; fill: var(--ink); }
+
+.term { background: #10161B; color: #CFE8D9; border-radius: 5px; padding: 12px 14px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.55; overflow-x: auto; }
+.term .p { color: #7FD3A6; }
+
+.compare { width: 100%; }
+.compare th:first-child { width: 22%; }
+
+/* review */
+.review { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; }
+.rv { border-top: 1px solid var(--rule); padding-block: 18px; min-width: 0; }
+.rv h3 { font-size: 1.3rem; margin-bottom: 6px; }
+.rv .pr { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.rv p { margin: 0 0 .6em; color: var(--ink-2); }
+blockquote { margin: .4em 0 .8em; padding: 0 0 0 14px; border-left: 2px solid var(--rule); font-style: italic; color: var(--ink); }
+blockquote footer { font-style: normal; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+/* dead ends */
+.ends { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.end { border: 1px solid var(--rule); border-radius: 6px; padding: 18px; background: var(--surface); display: grid; gap: 8px; align-content: start; min-width: 0; }
+.end .state { font-family: var(--f-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.end .state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--branch); }
+.end .state.audit::before { background: var(--ink); border-radius: 1px; }
+.end h3 { font-size: 1.3rem; }
+.end p { margin: 0; color: var(--ink-2); font-size: 15px; }
+.end p.so { color: var(--ink); font-weight: 500; font-size: 14.5px; }
+
+/* courses */
+.courses td:first-child { font-weight: 600; white-space: nowrap; }
+.courses td:last-child code { font-size: 12px; }
+.courses .fr { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); }
+
+.try { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+footer.site { margin-top: 64px; border-top: 1px solid var(--rule); padding-block: 22px 40px; font-size: 13px; color: var(--muted); }
+footer.site p { margin: 0 0 .5em; max-width: 90ch; }
+
+@media (max-width: 900px) {
+  .figures { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fig.hero { grid-column: span 2; grid-row: auto; }
+  .why, .notes, .ends { grid-template-columns: minmax(0, 1fr); }
+  .review, .try { grid-template-columns: minmax(0, 1fr); }
+  .case { grid-template-columns: minmax(0, 1fr); padding: 20px; }
+  .phase { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}
+@media (max-width: 560px) {
+  .masthead .wrap { padding-block: 36px 28px; }
+  .ev { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .frow { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .faxis { margin-left: 0; }
+  .reg-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .reg-row .rw { grid-column: 1 / -1; }
+  .fig .v { font-size: 1.7rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow"><span>Open-source logbook</span><span>DarkRISCV</span><span>January to June 2025</span></div>
+    <h1>Learning digital design by shipping it <em>upstream</em></h1>
+    <p class="lede">In 2025 Nicolas set out to move from software into hardware, with some VHDL already known. The vehicle was DarkRISCV, a small open-source RISC-V processor. This page reads the git history and the pull-request threads to show what was built, why, how the reviews went, and what never landed.</p>
+    <p class="provenance">Compiled in October 2026 from the repositories <span class="mono">darklife/darkriscv</span> and <span class="mono">nsauzede/darkriscv</span>.</p>
+
+    <div class="figures" aria-label="Key figures">
+      <div class="fig hero">
+        <div>
+          <div class="l">Pull requests merged by the maintainer</div>
+          <div class="v">17<small>of 20</small></div>
+          <div class="s">From January 7 to April 10, 2025: 93 days. One of the three closed PRs was folded into the next.</div>
+        </div>
+        <div>
+          <div class="meter" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span class="x"></span><span class="x"></span><span class="x"></span></div>
+          <div class="key"><span>17 merged</span><span>3 closed</span></div>
+        </div>
+      </div>
+      <div class="fig"><div class="v">21</div><div class="l">commits in upstream history</div><div class="s">Second-largest committer after the maintainer</div></div>
+      <div class="fig"><div class="v">813</div><div class="l">lines of Verilog upstream today</div><div class="s">18% of <span class="mono">rtl/</span>, by git blame</div></div>
+      <div class="fig"><div class="v">2</div><div class="l">FPGA boards ported</div><div class="s">Intel MAX10 and Cyclone V</div></div>
+      <div class="fig"><div class="v">38<small>of 40</small></div><div class="l">lines of the project's only CI</div><div class="s">Still running on every push</div></div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <ol>
+      <li><a href="#why">Why this project</a></li>
+      <li><a href="#timeline">Timeline</a></li>
+      <li><a href="#activity">Activity</a></li>
+      <li><a href="#cases">Four case studies</a></li>
+      <li><a href="#review">What review taught</a></li>
+      <li><a href="#deadends">Dead ends</a></li>
+      <li><a href="#today">What stays upstream</a></li>
+      <li><a href="#courses">Link to your courses</a></li>
+    </ol>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="why">
+  <div class="sec-head">
+    <span class="tag">Rationale</span>
+    <h2>Why this project</h2>
+  </div>
+  <div class="why">
+    <div>
+      <h3>The starting point</h3>
+      <p>A software background and some VHDL, but no Verilog yet.</p>
+      <p>The goal was a career move towards hardware: digital design, FPGAs, bare-metal software, and the serial buses that embedded boards run on, SPI and I2C.</p>
+    </div>
+    <div>
+      <h3>The vehicle</h3>
+      <p>DarkRISCV is a RISC-V core by Marcelo Samsoniuk, started in 2018 and "implemented from scratch in one night". It has about 2,600 stars on GitHub.</p>
+      <p>The whole stack fits in one repository: the Verilog core, caches, bus bridge, UART and I/O block, a <code>boot.S</code>, a tiny C library, a shell, an Icarus Verilog simulation and build files for about 20 boards. It is small enough to read end to end, and real enough that a maintainer reviews every change.</p>
+    </div>
+    <div>
+      <h3>The approach</h3>
+      <p>The history shows a deliberate climb. Each step needed the one before.</p>
+      <ol class="steps">
+        <li><span><b>Read and fix.</b> Small bugs found by reading the core.</span></li>
+        <li><span><b>Make it reproducible.</b> A firmware build that works and a CI.</span></li>
+        <li><span><b>Real boards.</b> Two new FPGA ports.</span></li>
+        <li><span><b>A new peripheral.</b> SPI, to read a real accelerometer.</span></li>
+        <li><span><b>Better tools.</b> Sensor stubs and a Verilator cosimulation.</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="timeline">
+  <div class="sec-head">
+    <span class="tag">History</span>
+    <h2>Timeline</h2>
+    <p>Every change, grouped by phase. Green chips landed upstream, copper ones stayed on a branch of the fork, black ones are the maintainer's.</p>
+  </div>
+
+  <div class="phase">
+    <div class="phase-label"><h3>Read and fix</h3><div class="when">January 2025</div></div>
+    <ol class="events">
+      <li class="ev"><time datetime="2025-01-07">Jan 7</time><div><span class="t">Remove duplicated cache wires in the Harvard build</span><span class="chips"><span class="chip ok">#72 merged</span><span class="chip area">RTL</span></span><div class="n">With separate instruction and data memories, <code>darkbridge.v</code> declared four wires twice. An <code>`ifndef __HARVARD__</code> guard fixes that build variant.</div></div></li>
+      <li class="ev"><time datetime="2025-01-08">Jan 8</time><div><span class="t">Build RV32E firmware with a recent GCC</span><span class="chips"><span class="chip ok">#73 merged</span><span class="chip area">Toolchain</span></span><div class="n">Newer GCC moved the CSR instructions into the Zicsr extension, so <code>-march=rv32e</code> had to become <code>rv32e_zicsr</code>.</div></div></li>
+      <li class="ev"><time datetime="2025-01-11">Jan 11–13</time><div><span class="t">Waveform presets for the UART, two Papilio boards</span><span class="chips"><span class="chip br">branch</span><span class="chip area">Sim · Boards</span></span><div class="n">First attempts at reviving old Xilinx Spartan boards.</div></div></li>
+    </ol>
+  </div>
+
+  <div class="phase">
+    <div class="phase-label"><h3>Make it reproducible</h3><div class="when">February 2025</div></div>
+    <ol class="events">
+      <li class="ev"><time datetime="2025-02-08">Feb 8</time><div><span class="t">Fix the firmware build</span><span class="chips"><span class="chip ok">#74 merged</span><span class="chip area">Firmware</span></span><div class="n">Standard <code>CFLAGS</code>, missing headers in CoreMark, a missing <code>size_t</code>.</div></div></li>
+      <li class="ev"><time datetime="2025-02-08">Feb 8</time><div><span class="t">Add a GitHub Actions CI</span><span class="chips"><span class="chip ok">#75 merged</span><span class="chip area">CI</span></span><div class="n">An Arch Linux container installs Icarus Verilog and a RISC-V toolchain, simulates, rebuilds and simulates again on every push. It is still the project's only CI.</div></div></li>
+      <li class="ev"><time datetime="2025-02-09">Feb 9</time><div><span class="t">Fix a hold value in the instruction decoder</span><span class="chips"><span class="chip ok">#76 merged</span><span class="chip area">RTL</span></span><div class="n">A one-character bug in the core. <a href="#case-xcus">Case study 1</a>.</div></div></li>
+      <li class="ev"><time datetime="2025-02-09">Feb 9</time><div><span class="t">Drop the executable bit on 14 source files</span><span class="chips"><span class="chip ok">#77 merged</span></span></div></li>
+      <li class="ev"><time datetime="2025-02-09">Feb 9</time><div><span class="t">Remove trailing spaces in 90 files</span><span class="chips"><span class="chip no">#78 closed</span></span><div class="n">Declined by agreement. <a href="#review">What review taught</a>.</div></div></li>
+      <li class="ev"><time datetime="2025-02-10">Feb 10–12</time><div><span class="t">A UART queue for simulation, another Papilio attempt</span><span class="chips"><span class="chip br">branch</span></span></div></li>
+    </ol>
+  </div>
+
+  <div class="phase">
+    <div class="phase-label"><h3>Real boards</h3><div class="when">February and March 2025</div></div>
+    <ol class="events">
+      <li class="ev"><time datetime="2025-02-14">Feb 14</time><div><span class="t">Port to the Trenz MAX1000, Intel MAX10</span><span class="chips"><span class="chip ok">#80 merged Feb 26</span><span class="chip area">Board</span></span><div class="n">A 10M08 FPGA with 8 LEDs, a 12 MHz oscillator and an LIS3DH accelerometer. The SoC takes about 40% of the logic. A vendor PLL turns 12 MHz into 32 MHz, and a RAM wrapper around <code>altsyncram</code> lets Quartus infer block RAM so the design fits.</div></div></li>
+      <li class="ev"><time datetime="2025-03-06">Mar 6</time><div><span class="t">Port to the Terasic DE10-Nano under MiSTer, Cyclone V</span><span class="chips"><span class="chip ok">#81 merged</span><span class="chip area">Board</span></span><div class="n">About 10% of a 110K-LE device, inside the MiSTer framework. The serial console is reached through MiSTer's Linux side over ssh.</div></div></li>
+    </ol>
+  </div>
+
+  <div class="phase">
+    <div class="phase-label"><h3>More I/O</h3><div class="when">March 2025</div></div>
+    <ol class="events">
+      <li class="ev"><time datetime="2025-03-07">Mar 7</time><div><span class="t">Sixteen LEDs in the I/O block</span><span class="chips"><span class="chip ok">#82 merged</span><span class="chip area">RTL</span></span></div></li>
+      <li class="ev"><time datetime="2025-03-19">Mar 19</time><div><span class="t">Byte writes to the LED register</span><span class="chips"><span class="chip ok">#85 merged</span><span class="chip area">RTL</span></span><div class="n"><a href="#case-bytes">Case study 2</a>.</div></div></li>
+      <li class="ev"><time datetime="2025-03-25">Mar 25</time><div><span class="t">GPIO ports exposed, LED and output port widened to 32 bits</span><span class="chips"><span class="chip ok">#88 merged</span><span class="chip area">RTL · Firmware</span></span></div></li>
+    </ol>
+  </div>
+
+  <div class="phase">
+    <div class="phase-label"><h3>Talking to a sensor</h3><div class="when">March and April 2025</div></div>
+    <ol class="events">
+      <li class="ev"><time datetime="2025-03-19">Mar 19</time><div><span class="t">darkspi: an SPI master in the I/O block, with a simulated LIS3DH</span><span class="chips"><span class="chip ok">#86 merged Mar 23</span><span class="chip area">RTL · Firmware · Sim</span></span><div class="n">Opened as a request for comments. Two review rounds, a redesign, then a test on the real board.</div></div></li>
+      <li class="ev"><time datetime="2025-03-23">Mar 23</time><div><span class="t">spidemo calibration and autostart</span><span class="chips"><span class="chip ok">#87 merged</span><span class="chip area">Firmware</span></span></div></li>
+      <li class="ev"><time datetime="2025-03-28">Mar 28</time><div><span class="t">SPI cleanup, and a second SPI master written in C</span><span class="chips"><span class="chip ok">#89 merged</span><span class="chip area">RTL · Firmware</span></span><div class="n">Bit-banging: software toggles GPIO pins to speak SPI. <a href="#case-spi">Case study 3</a>.</div></div></li>
+      <li class="ev"><time datetime="2025-03-31">Mar 31</time><div><span class="t">Verilator and ImGui cosimulation</span><span class="chips"><span class="chip ok">#90 merged</span><span class="chip area">Sim</span></span><div class="n"><a href="#case-cosim">Case study 4</a>.</div></div></li>
+      <li class="ev"><time datetime="2025-04-07">Apr 6–10</time><div><span class="t">3-wire SPI and a clock divider set at run time</span><span class="chips"><span class="chip ok">#92 merged</span><span class="chip no">#91 folded in</span><span class="chip area">RTL · Firmware</span></span><div class="n">One data pin used in both directions. Works with both masters and on the real sensor.</div></div></li>
+    </ol>
+  </div>
+
+  <div class="phase">
+    <div class="phase-label"><h3>Side quests</h3><div class="when">March and April 2025</div></div>
+    <ol class="events">
+      <li class="ev"><time datetime="2025-03-24">Mar 24</time><div><span class="t">A stub of the ADXL345, the DE10-Nano's accelerometer</span><span class="chips"><span class="chip br">branch</span></span></div></li>
+      <li class="ev"><time datetime="2025-03-26">Mar 26</time><div><span class="t">I2C by bit-banging, an I2C master and an I2C sensor stub</span><span class="chips"><span class="chip br">branch</span></span></div></li>
+      <li class="ev"><time datetime="2025-04-11">Apr 11</time><div><span class="t">An Adafruit-style SPI test script, early I2C bit-banging</span><span class="chips"><span class="chip br">branch</span></span></div></li>
+    </ol>
+  </div>
+
+  <div class="phase">
+    <div class="phase-label"><h3>When upstream moves</h3><div class="when">May to July 2025</div></div>
+    <ol class="events">
+      <li class="ev"><time datetime="2025-05-23">May 23</time><div><span class="t">Upstream makes big-endian the default</span><span class="chips"><span class="chip up">maintainer</span></span><div class="n">The SPI demo has to follow.</div></div></li>
+      <li class="ev"><time datetime="2025-06-04">Jun 4</time><div><span class="t">spidemo pinned to little-endian, bit-banging disabled</span><span class="chips"><span class="chip br">branch · WIP</span></span></div></li>
+      <li class="ev"><time datetime="2025-06-25">Jun 25</time><div><span class="t">A big-endian fix attempt and a CI test</span><span class="chips"><span class="chip br">branch · WIP</span><span class="chip no">#102 closed</span></span></div></li>
+      <li class="ev"><time datetime="2025-07-02">Jul 2</time><div><span class="t">Upstream returns to little-endian by default</span><span class="chips"><span class="chip up">maintainer</span></span></div></li>
+    </ol>
+  </div>
+</section>
+
+<section id="activity">
+  <div class="sec-head">
+    <span class="tag">Rhythm</span>
+    <h2>Activity</h2>
+  </div>
+  <div class="panel">
+    <div class="chart-title">Commits per week, January to June 2025</div>
+    <div class="chart-sub">35 distinct commits across all branches of the fork. Hover or focus a week to see its commits.</div>
+    <div class="legend"><span><i style="background:var(--merged)"></i>Landed upstream (21)</span><span><i style="background:var(--branch)"></i>Stayed on a branch (14)</span></div>
+    <div class="chart" id="weekly" role="group" aria-label="Commits per week, stacked by whether they landed upstream"></div>
+    <details class="data">
+      <summary>Show as a table</summary>
+      <div class="tbl-wrap"><table id="weekly-table"><thead><tr><th>Week of</th><th class="num">Landed</th><th class="num">Branch</th><th>Commits</th></tr></thead><tbody></tbody></table></div>
+    </details>
+  </div>
+  <div class="notes">
+    <p><b>Two bursts.</b> The CI and the first fixes in early February. Then the SPI work, with 15 commits in the four weeks from March 17.</p>
+    <p><b>Merges lag commits.</b> The MAX1000 port was committed on February 14 and merged on February 26. The SPI request for comments took four days and two reviews.</p>
+    <p><b>A stop, then a restart that stalled.</b> After April 11 nothing until upstream switched to big-endian. Two attempts in June to follow it were left as work in progress.</p>
+  </div>
+</section>
+
+<section id="cases">
+  <div class="sec-head">
+    <span class="tag">Under the hood</span>
+    <h2>Four case studies</h2>
+    <p>Each one is a small, real piece of digital design or embedded software, with the code that went upstream.</p>
+  </div>
+  <div class="cases">
+
+    <article class="case" id="case-xcus">
+      <header><span class="num">Case 1 · PR #76 · February 9, 2025</span><h3>One character in the decoder</h3></header>
+      <div>
+        <p>The core decodes each instruction's opcode into one-bit flags: <code>XRCC</code> for register-register operations, <code>XCUS</code> for the custom opcode, and so on. When the pipeline stalls, the input <code>HLT</code> is high and every flag must keep its own value until the stall ends.</p>
+        <p>One line kept the wrong value: during a stall, the custom-instruction flag was loaded with the register-op flag. It was found by reading the code next to its neighbours, not by a failing test. The PR said only "Seems like a copypasta ?".</p>
+        <p class="lesson">In RTL a copy-paste error is silent. Reading each line against the lines around it is a real verification technique.</p>
+      </div>
+      <div>
+<pre><span class="c">// rtl/darkriscv.v, execute stage</span>
+XRCC   &lt;= HLT ? XRCC   : IDATAX[6:0]==`RCC;
+<span class="d">- XCUS   &lt;= HLT ? XRCC   : IDATAX[6:0]==`CUS;</span><span class="a">+ XCUS   &lt;= HLT ? XCUS   : IDATAX[6:0]==`CUS;</span>XSYS   &lt;= HLT ? XSYS   : IDATAX[6:0]==`SYS;</pre>
+        <div class="cap">The maintainer's answer, the same day: "for sure yes! thanks for the fix!"</div>
+      </div>
+    </article>
+
+    <article class="case" id="case-bytes">
+      <header><span class="num">Case 2 · PRs #85 and #86 · March 2025</span><h3>Byte lanes, and a register designed in review</h3></header>
+      <div>
+        <p>A 32-bit bus carries four byte lanes, and the byte-enable signal <code>XBE</code> says which ones a store writes. A C store of one byte to the LED register wrote both of its bytes, so writing the low eight LEDs also overwrote the high eight. The fix honours the byte enable.</p>
+        <p>The first version of the SPI block also depended on the access width: it answered with a different layout for each one. In review, the maintainer suggested one 32-bit word with control or status on top and data below, read and written whole. The merged register follows that advice.</p>
+        <p class="lesson">A register map is an interface. Make it boring: one width, one layout, status where software can poll it.</p>
+      </div>
+      <div>
+<pre><span class="c">// rtl/darkio.v, LED register write</span>
+<span class="d">- 5'b01000: LEDFF &lt;= XATAI[15:0];</span><span class="a">+ 5'b01000: LEDFF &lt;= XBE == 4'b0001 ? {LEDFF[15:8], XATAI[7:0]}</span><span class="a">+                                    : XATAI[15:0];</span></pre>
+      </div>
+      <div class="wide">
+        <div class="chart-title" style="margin-bottom:10px">darkspi, at DarkIO offset 0x1C (address 0x4000001C)</div>
+        <div class="reg" role="table" aria-label="SPI register layout">
+          <div class="reg-row" role="row"><span class="rw" role="rowheader">write</span>
+            <span class="bf" role="cell"><span class="bits">31–24</span><span class="what">0x00, or non-zero to configure the master</span></span>
+            <span class="bf" role="cell"><span class="bits">23–16</span><span class="what">command: register, read bit, auto-increment</span></span>
+            <span class="bf span2" role="cell"><span class="bits">15–0</span><span class="what">data to send, or a placeholder for the answer</span></span>
+          </div>
+          <div class="reg-row" role="row"><span class="rw" role="rowheader">read</span>
+            <span class="bf" role="cell"><span class="bits">31–24</span><span class="what">status: bit 25 ready, bit 24 busy</span></span>
+            <span class="bf" role="cell"><span class="bits">23–16</span><span class="what">0x00</span></span>
+            <span class="bf span2" role="cell"><span class="bits">15–0</span><span class="what">data received, bytes swapped</span></span>
+          </div>
+        </div>
+<pre style="margin-top:12px"><span class="c">// read OUT_X_L and OUT_X_H in one 24-bit transfer: 0xE8 = 0x28 | read | auto-increment</span>
+*((volatile int *)SPI_MMADDR) = 0x00e80000;
+short swapped_out_x = *((volatile short *)SPI_MMADDR);   <span class="c">// 0xLOHI</span></pre>
+        <div class="cap">From the comment block at the top of <span class="mono">rtl/darkspi.v</span>.</div>
+      </div>
+    </article>
+
+    <article class="case" id="case-spi">
+      <header><span class="num">Case 3 · PRs #86, #89 and #92 · March and April 2025</span><h3>SPI, one bit at a time</h3></header>
+      <div class="wide">
+        <p>The LIS3DH accelerometer on the MAX1000 answers its <code>WHO_AM_I</code> register, 0x0F, with 0x33. Reading it takes 16 clock cycles: eight command bits out on SDI, eight data bits back on SDO. The sensor uses SPI mode 3, so the clock rests high and both sides sample on the rising edge. The diagram is the exchange as written by hand in <span class="mono">src/spidemo/SPIBB.md</span>.</p>
+        <div class="wave-wrap"><svg class="wave" id="wave" role="img" aria-label="SPI mode 3 read of register 0x0F returning 0x33: chip select low for 16 clock cycles, command 0x8F on SDI, answer 0x33 on SDO"></svg></div>
+        <div class="cap">Datasheet limits noted in SPIBB.md: clock period 100 ns minimum (10 MHz), chip-select setup 5 ns and hold 20 ns, SDI setup 5 ns and hold 15 ns, SDO valid within 50 ns.</div>
+      </div>
+      <div>
+        <h3 style="font-size:1.2rem;margin-bottom:8px">Two masters for the same wires</h3>
+        <div class="tbl-wrap"><table class="compare">
+          <thead><tr><th></th><th>Hardware, darkspi</th><th>Software, bit-banged</th></tr></thead>
+          <tbody>
+            <tr><td>Where</td><td>a Verilog state machine, <code>spi_master.v</code></td><td>C in <code>spidemo/main.c</code>, driving GPIO pins</td></tr>
+            <tr><td>Clock</td><td>a divider of the system clock, set at run time</td><td>as fast as the CPU loop allows</td></tr>
+            <tr><td>CPU work</td><td>one write, poll status, one read</td><td>several I/O accesses per bit</td></tr>
+            <tr><td>Good for</td><td>normal use</td><td>debugging and prototyping a new bus</td></tr>
+          </tbody>
+        </table></div>
+        <p style="margin-top:12px">Having both made it possible to check one against the other on the real sensor. 3-wire SPI came next: one pin carries data both ways, so the master must release it, put it in high impedance, before the sensor answers.</p>
+      </div>
+      <div>
+        <h3 style="font-size:1.2rem;margin-bottom:8px">Bit-banging from a PC, through the UART</h3>
+        <p>The helper <code>ser.py</code> sends shell commands over the serial port. Each hex digit of a <code>bb</code> command is one write of four pins: enable, chip select, clock, data.</p>
+<pre>./ser.py "set_bb 1" "bb 7 f b 9 b 8 a 8 a 8 a 9 b 9 b 9 b 9 b ..."
+<span class="c">#  f = 1111  idle: CS high, clock high
+#  9 = 1001  CS low, clock low,  data 1
+#  b = 1011  CS low, clock high, data 1   ("9 b" clocks out a 1)
+#  8 = 1000  CS low, clock low,  data 0
+#  a = 1010  CS low, clock high, data 0   ("8 a" clocks out a 0)</span></pre>
+        <div class="term" style="margin-top:12px" aria-label="Shell output on the MAX1000"><span class="p">10335&gt;</span> sensor<br>out_x=0f10<br>out_x=0f10<br>out_x=0ef0<br>out_x=0ef0<br>out_x=0ef0<br>out_x=0f60</div>
+        <div class="cap">The X axis of the accelerometer, live on the MAX1000, from the board's README.</div>
+      </div>
+      <div class="wide"><p class="lesson">A protocol is learned at the bit level. Drawing one transaction by hand, then making two independent implementations agree, is how the datasheet becomes real.</p></div>
+    </article>
+
+    <article class="case" id="case-cosim">
+      <header><span class="num">Case 4 · PR #90 · March 31, 2025</span><h3>Watching the SoC from a window</h3></header>
+      <div>
+        <p>Icarus Verilog interprets the design and writes waveforms. Verilator takes another route: it compiles the Verilog into a C++ model that a program can step. <span class="mono">sim/Vdarksocv_gui.cpp</span> wraps that model in an ImGui window with Run, Step, AutoStep and Reset buttons, a clock checkbox and the LED register.</p>
+        <p>Running the same RTL through two simulators also catches code one of them tolerates. The cost showed at once: serial output through the C++ model was so slow that a <code>NOBANNER</code> option was added to skip the boot banner.</p>
+        <p class="lesson">A simulator is a tool you can build on. A cosimulation turns the RTL into a library you drive from your own code.</p>
+      </div>
+      <div>
+<pre><span class="c"># sim/README.md</span>
+make clean all APPLICATION=spidemo NOBANNER=1 SPIBB=1 COSIM=1
+
+<span class="c">// sim/Vdarksocv_gui.cpp, the control strip</span>
+ImGui::Checkbox("Run", &amp;run);
+ImGui::SameLine(); if (ImGui::Button("Step")) { step = 2; }
+ImGui::SliderInt("StepTime", &amp;step_time, 1, 10);
+ImGui::Checkbox("clk", &amp;clk);
+ImGui::SameLine(); if (ImGui::Button("Reset")) { reset = true; }
+ImGui::Text("LED %08lX", (unsigned long)darksocv-&gt;LED);</pre>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="review">
+  <div class="sec-head">
+    <span class="tag">Collaboration</span>
+    <h2>What review taught</h2>
+    <p>Every pull request went through the maintainer. The threads are public, and four of them carry lessons that apply to any team.</p>
+  </div>
+  <div class="review">
+    <div class="rv">
+      <div class="pr">#75 · Add GitHub Actions CI</div>
+      <h3>One concern per pull request</h3>
+      <p>The first version bundled the CI with a whitespace cleanup. The maintainer welcomed the CI but asked for the cleanup in separate pull requests, being unsure about it. The PR was trimmed to the CI alone, and #77 and #78 followed.</p>
+    </div>
+    <div class="rv">
+      <div class="pr">#78 · Remove trailing spaces, 90 files</div>
+      <h3>History is worth more than tidiness</h3>
+      <blockquote>"we will change lots of files, including some that were not changed for a long time, which may disrupt the sense of time on such files"<footer>The maintainer</footer></blockquote>
+      <p>A mass reformat makes every old file look recently touched and buries its real history under one commit. Nicolas agreed and closed the PR.</p>
+    </div>
+    <div class="rv">
+      <div class="pr">#86 · Add darkspi SPI master · RFC</div>
+      <h3>Ask early, and say it is a draft</h3>
+      <p>Marked as a request for comments, the first SPI version got two detailed reviews: let the bus bridge route the bytes, use one 32-bit register, move the SPI files into <code>rtl/lib/spi</code>, state the license clearly. The second version was rewritten around them and tested on the MAX1000. Before merging, the maintainer built it for another board with Xilinx ISE.</p>
+      <blockquote>"always remember test the case where everything is disabled, just to ensure the basic scenarios are working!"<footer>The maintainer, in the same review</footer></blockquote>
+    </div>
+    <div class="rv">
+      <div class="pr">#80 · MAX1000 port</div>
+      <h3>Good structure gets noticed</h3>
+      <p>The port gave the board its own <code>top.v</code>, so board-specific parts such as the PLL and RAM stay out of the shared SoC. The maintainer replied with plans for exactly that structure on every board, so that one day several cores could be mapped onto one chip.</p>
+    </div>
+  </div>
+</section>
+
+<section id="deadends">
+  <div class="sec-head">
+    <span class="tag">Honest accounting</span>
+    <h2>Dead ends and open threads</h2>
+    <p>Fourteen of the 35 commits never landed. Most were experiments by design. A few are worth keeping in mind.</p>
+  </div>
+  <div class="ends">
+    <div class="end">
+      <span class="state">Left as work in progress</span>
+      <h3>Upstream moved the ground</h3>
+      <p>On May 23 the maintainer made big-endian the default. In June the spidemo branch fell back to little-endian with bit-banging disabled and marked broken, and a fix attempt stalled. On July 2 upstream went back to little-endian. Nothing in the CI ran the spidemo, so the break had to be found by hand.</p>
+      <p class="so">A feature that no automated test runs belongs to whoever changes the code next.</p>
+    </div>
+    <div class="end">
+      <span class="state">Branch</span>
+      <h3>I2C never landed</h3>
+      <p>Two branches: I2C by bit-banging, an I2C master in Verilog, and a stub of the sensor answering on I2C. The notes draw a complete WHO_AM_I exchange: start, address, acknowledge, repeated start, stop. The last I2C commit came the day after the final SPI merge.</p>
+      <p class="so">A clean end point matters. Half a protocol is hard to pick up again.</p>
+    </div>
+    <div class="end">
+      <span class="state">Branch</span>
+      <h3>Old boards, old tools</h3>
+      <p>Reviving the Papilio and Spartan-3 boards meant Xilinx ISE, a toolchain frozen since 2013. The ADXL345 stub for the DE10-Nano and a UART queue for simulation stayed on branches too.</p>
+      <p class="so">Vendor tools set the pace of FPGA work, often more than the design does.</p>
+    </div>
+    <div class="end">
+      <span class="state">Known limit</span>
+      <h3>Cosimulation is slow</h3>
+      <p>The README says it plainly: performance "is not as good as expected, for now". Printing over the simulated UART costs so much that the banner had to become optional.</p>
+      <p class="so">Measure where simulated time goes before adding features to a simulator.</p>
+    </div>
+    <div class="end">
+      <span class="state audit">Found in the October 2026 audit</span>
+      <h3>The CI checks the build, not the behaviour</h3>
+      <p>The simulation ends with <code>$finish</code> both at the shell prompt and on an invalid instruction, and both exit with status 0. On the June 2025 branch the job would pass even though the core cannot boot its committed image, built big-endian for a little-endian core.</p>
+      <p class="so">Make every test fail once on purpose. A check that cannot fail checks nothing.</p>
+    </div>
+    <div class="end">
+      <span class="state">Fit</span>
+      <h3>A small FPGA pushes back</h3>
+      <p>On the MAX10 the generic RAM would not map to block RAM. The choice was a read-modify-write workaround or a board-specific wrapper around Intel's <code>altsyncram</code>. The PR took the wrapper and named the cleaner fix as future work.</p>
+      <p class="so">Portable Verilog meets vendor primitives at the memory. Plan for it.</p>
+    </div>
+  </div>
+</section>
+
+<section id="today">
+  <div class="sec-head">
+    <span class="tag">Footprint</span>
+    <h2>What stays upstream</h2>
+    <p>Of 4,593 lines in <code>rtl/</code> on upstream master, 813 still carry Nicolas's last change: 18%. Most of it is the SPI block: 648 lines across four files.</p>
+  </div>
+  <div class="panel">
+    <div class="chart-title">Lines per file whose last change is Nicolas's</div>
+    <div class="chart-sub">Filled: those lines. Track: the file's length. One scale for every file. Upstream master, October 11, 2026.</div>
+    <div class="files" id="files"></div>
+    <div class="faxis" id="faxis" aria-hidden="true"></div>
+    <details class="data">
+      <summary>Show as a table</summary>
+      <div class="tbl-wrap"><table id="files-table"><thead><tr><th>File</th><th class="num">Nicolas's lines</th><th class="num">File length</th><th class="num">Share</th></tr></thead><tbody></tbody></table></div>
+    </details>
+  </div>
+  <div class="notes">
+    <p><b>Written from the ground up.</b> <code>darkspi.v</code>, the bit-banged master, the LIS3DH stub, the cosimulation files and the 462-line spidemo.</p>
+    <p><b>Adapted with credit.</b> <code>spi_master.v</code> started from Victor Pecanins's MAX10 demos, under the GPL, and says so in its header.</p>
+    <p><b>Woven into shared files.</b> Parts of <code>darksocv.v</code>, <code>darkio.v</code> and <code>io.h</code>, where the SPI block and GPIO plug into the SoC.</p>
+  </div>
+</section>
+
+<section id="courses">
+  <div class="sec-head">
+    <span class="tag">For your studies</span>
+    <h2>Link to your courses</h2>
+    <p>Every L3 subject in computer science and embedded systems has a file in this repository where it becomes concrete. A good way in: pick a row, open the file, and find the idea in the code.</p>
+  </div>
+  <div class="tbl-wrap">
+    <table class="courses">
+      <thead><tr><th>Course</th><th>What this project exercises</th><th>Where to look</th></tr></thead>
+      <tbody>
+        <tr><td>Computer architecture<span class="fr">Architecture des ordinateurs</span></td><td>Pipeline stages and stalls, RV32E versus RV32I, CSRs, caches, Harvard versus von Neumann memory</td><td><code>rtl/darkriscv.v</code>, <code>rtl/darkcache.v</code>, <code>rtl/config.vh</code></td></tr>
+        <tr><td>Digital design<span class="fr">Conception de circuits numériques</span></td><td>Registers, byte enables, state machines, tristate pins, clock dividers, block RAM inference</td><td><code>rtl/darkio.v</code>, <code>rtl/lib/spi/spi_master.v</code></td></tr>
+        <tr><td>Embedded systems<span class="fr">Systèmes embarqués</span></td><td>Memory-mapped registers, <code>volatile</code>, bit-banging, boot code, linker script</td><td><code>src/darklibc/include/io.h</code>, <code>src/boot.S</code>, <code>src/darksocv.lds</code></td></tr>
+        <tr><td>Buses and protocols<span class="fr">Bus et protocoles série</span></td><td>SPI modes and timing, 3-wire half duplex, I2C start, stop and acknowledge</td><td><code>src/spidemo/SPIBB.md</code>, <code>rtl/lib/spi/</code></td></tr>
+        <tr><td>Compilers<span class="fr">Compilation</span></td><td>Cross-compiling, <code>-march</code> and <code>-mabi</code>, the ILP32E ABI, endianness, objcopy to a memory image</td><td><code>src/config.mk</code>, <code>src/Makefile</code></td></tr>
+        <tr><td>Verification<span class="fr">Simulation et test</span></td><td>Testbenches, device stubs, reading waveforms, two simulators</td><td><code>sim/</code>, <code>rtl/lib/spi/lis3dh_stub.v</code></td></tr>
+        <tr><td>Software engineering<span class="fr">Génie logiciel</span></td><td>CI, branches, pull requests, code review, splitting changes</td><td><code>.github/workflows/Linux.yml</code>, the PR threads</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="try" style="margin-top:36px">
+    <div class="prose">
+      <h3 style="margin-bottom:10px">Try it</h3>
+      <p>The default simulation needs only Icarus Verilog: it boots the firmware shipped in the repository and stops at the shell prompt. Rebuilding the firmware needs a RISC-V cross compiler, whose prefix and directory go in <code>CROSS</code> and <code>CCPATH</code>.</p>
+      <p>Then open the waveform in GTKWave and look for SPI transfers like the one in the diagram above.</p>
+    </div>
+<pre>git clone https://github.com/darklife/darkriscv
+cd darkriscv
+make                                  <span class="c"># simulate the shipped firmware</span>
+make clean all APPLICATION=spidemo    <span class="c"># rebuild with SPI, simulate</span>
+gtkwave rtl/lib/spi/darksocv.gtkw</pre>
+  </div>
+</section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>Sources: the git history of <span class="mono">darklife/darkriscv</span> and of every branch of <span class="mono">nsauzede/darkriscv</span>; GitHub pull requests #72 to #102 and their comments; <span class="mono">git blame</span> on upstream master as of October 11, 2026. A change pushed on several branches is counted once. Star count read from GitHub on October 12, 2026.</p>
+    <p>Quotes are from the public pull-request threads, unedited. The technical overview of the same work is <a href="spidemo.html">spidemo.html</a>.</p>
+  </div>
+</footer>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var tip = document.getElementById("tip");
+  function showTip(build, x, y) {
+    while (tip.firstChild) tip.removeChild(tip.firstChild);
+    build(tip);
+    tip.hidden = false;
+    var r = tip.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+    var left = Math.min(Math.max(8, x + 14), vw - r.width - 8);
+    var top = y + 16 + r.height > vh - 8 ? y - r.height - 12 : y + 16;
+    tip.style.left = left + "px";
+    tip.style.top = Math.max(8, top) + "px";
+  }
+  function hideTip() { tip.hidden = true; }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function s(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  /* ---------- weekly activity ---------- */
+  var WEEKS = [["2025-01-06",["Do not duplicate cache signals in Harvard mode","Fix rv32e mem build with recent gcc"],["Add sim uart gtkw"]],["2025-01-13",[],["Add papilio one 500k WIP","Fix papilio_duo_logicstart board"]],["2025-01-20",[],[]],["2025-01-27",[],[]],["2025-02-03",["Add Linux Github Actions","Fix src build","Fix CI URLs","Remove 'x' perm for non-executables","Fix XCUS to retain its actual value"],["Remove trailing spaces"]],["2025-02-10",["Add new board MAX1000 w/ Intel MAX10"],["Add UARTQ for simulation","WIP: try to revive xilinx/papilio"]],["2025-02-17",[],[]],["2025-02-24",[],[]],["2025-03-03",["Add new board DE10-Nano w/ Intel Cyclone V (MiSTer)","Extend Darksocv/darkio to 16-leds"],[]],["2025-03-10",[],["WIP: fix gpio"]],["2025-03-17",["Add darkspi SPI master to darkio","Fix leds byte access","Better calibrate spidemo input range, autostart"],[]],["2025-03-24",["Merge SPI simulation reg into same addr range","Promote led/oport to 32 bits","Expose darkio iport/gpio i/o ports","Cleanup SPI, add bitbanging"],["Add ADXL345 SPI stub -- WIP","Experiment with i2c bitbanging -- WIP","Try to add lis3dh_stub wait state"]],["2025-03-31",["Add early verilator+imgui cosim support","Enhance Bit-Banging support"],[]],["2025-04-07",["Early support for 3-wire SPI","Add configure, fix 3W, default SPI3WIRE and SPIBB"],["Add adafruit SPI simpletest, early I2C BB support"]],["2025-04-14",[],[]],["2025-04-21",[],[]],["2025-04-28",[],[]],["2025-05-05",[],[]],["2025-05-12",[],[]],["2025-05-19",[],[]],["2025-05-26",[],[]],["2025-06-02",[],["Spidemo Litte-Endian only, SPIBB broken for now -- WIP"]],["2025-06-09",[],[]],["2025-06-16",[],[]],["2025-06-23",[],["Fix big endian - WIP set leds early","Test CI"]],["2025-06-30",[],[]]];
+  var MARKS = [{ i: 19, label: "upstream: big-endian by default, May 23", short: "big-endian, May 23", row: 0 }, { i: 25, label: "back to little-endian, Jul 2", short: "little-endian, Jul 2", row: 1 }];
+  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function fmtWeek(iso) { var d = new Date(iso + "T00:00:00"); return MON[d.getMonth()] + " " + d.getDate(); }
+
+  var weekly = document.getElementById("weekly");
+  function drawWeekly() {
+    var W = Math.max(280, weekly.clientWidth), H = 236;
+    var m = { l: 26, r: 6, t: 40, b: 26 };
+    var pw = W - m.l - m.r, ph = H - m.t - m.b, n = WEEKS.length, ymax = 8;
+    var slot = pw / n, bw = Math.min(24, slot * 0.64), gap = 2;
+    var y = function (v) { return m.t + ph - (v / ymax) * ph; };
+    while (weekly.firstChild) weekly.removeChild(weekly.firstChild);
+    var svg = s("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H }, weekly);
+    [0, 2, 4, 6, 8].forEach(function (v) {
+      s("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: "var(--grid)", "stroke-width": 1 }, svg);
+      var t = s("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg); t.textContent = v;
+    });
+    MARKS.forEach(function (mk) {
+      var x = m.l + slot * (mk.i + 0.5);
+      s("line", { x1: x, x2: x, y1: 10 + mk.row * 13, y2: m.t + ph, stroke: "var(--muted)", "stroke-width": 1 }, svg);
+      var t = s("text", { x: x - 4, y: 12 + mk.row * 13, "text-anchor": "end" }, svg); t.textContent = W < 640 ? mk.short : mk.label;
+    });
+    var prevM = -1;
+    WEEKS.forEach(function (w, i) {
+      var d = new Date(w[0] + "T00:00:00");
+      if (d.getMonth() !== prevM) {
+        prevM = d.getMonth();
+        var t = s("text", { x: m.l + slot * i + 1, y: H - 6 }, svg); t.textContent = MON[prevM];
+      }
+    });
+    s("line", { x1: m.l, x2: W - m.r, y1: y(0), y2: y(0), stroke: "var(--rule)", "stroke-width": 1 }, svg);
+
+    WEEKS.forEach(function (w, i) {
+      var a = w[1].length, b = w[2].length, cx = m.l + slot * (i + 0.5), x0 = cx - bw / 2;
+      var g = s("g", { "class": "slot" }, svg);
+      if (a) {
+        var top = b ? y(a) + gap / 2 : y(a);
+        if (b) s("rect", { "class": "bar", x: x0, y: top, width: bw, height: y(0) - top, fill: "var(--merged)" }, g);
+        else s("path", { "class": "bar", d: roundTop(x0, top, bw, y(0) - top, 4), fill: "var(--merged)" }, g);
+      }
+      if (b) {
+        var bt = y(a + b), bb = a ? y(a) - gap / 2 : y(0);
+        s("path", { "class": "bar", d: roundTop(x0, bt, bw, bb - bt, 4), fill: "var(--branch)" }, g);
+      }
+      if (a + b === 7) { var lt = s("text", { x: cx, y: y(7) - 6, "text-anchor": "middle" }, g); lt.textContent = "7"; }
+      var hit = s("rect", { "class": "hit", x: m.l + slot * i, y: m.t - 4, width: slot, height: ph + 4, tabindex: 0, role: "img",
+        "aria-label": "Week of " + fmtWeek(w[0]) + ": " + a + " landed, " + b + " on a branch" }, g);
+      function show(ev, viaFocus) {
+        g.classList.add("on");
+        var rr = hit.getBoundingClientRect();
+        var px = viaFocus ? rr.left + rr.width / 2 : ev.clientX, py = viaFocus ? rr.top + 40 : ev.clientY;
+        showTip(function (box) {
+          box.appendChild(el("div", "h", "Week of " + fmtWeek(w[0])));
+          [[a, "landed upstream", "var(--merged)"], [b, "on a branch", "var(--branch)"]].forEach(function (r) {
+            var row = el("div", "row"); var k = el("span", "k"); k.style.background = r[2];
+            row.appendChild(k); row.appendChild(el("b", null, String(r[0]))); row.appendChild(el("span", null, r[1])); box.appendChild(row);
+          });
+          var subs = w[1].concat(w[2]);
+          if (subs.length) { var ul = el("ul"); subs.forEach(function (t) { ul.appendChild(el("li", null, t)); }); box.appendChild(ul); }
+        }, px, py);
+      }
+      hit.addEventListener("pointermove", function (e) { show(e, false); });
+      hit.addEventListener("pointerleave", function () { g.classList.remove("on"); hideTip(); });
+      hit.addEventListener("focus", function (e) { show(e, true); });
+      hit.addEventListener("blur", function () { g.classList.remove("on"); hideTip(); });
+    });
+  }
+  function roundTop(x, yy, w, h, r) {
+    r = Math.min(r, h, w / 2);
+    if (h <= 0) return "";
+    return "M" + x + "," + (yy + h) + "V" + (yy + r) + "Q" + x + "," + yy + " " + (x + r) + "," + yy +
+      "H" + (x + w - r) + "Q" + (x + w) + "," + yy + " " + (x + w) + "," + (yy + r) + "V" + (yy + h) + "Z";
+  }
+  var wt = document.querySelector("#weekly-table tbody");
+  WEEKS.forEach(function (w) {
+    if (!w[1].length && !w[2].length) return;
+    var tr = el("tr");
+    tr.appendChild(el("td", null, fmtWeek(w[0])));
+    tr.appendChild(el("td", "num", String(w[1].length)));
+    tr.appendChild(el("td", "num", String(w[2].length)));
+    tr.appendChild(el("td", null, w[1].concat(w[2]).join("; ")));
+    wt.appendChild(tr);
+  });
+
+  /* ---------- files ---------- */
+  var FILES = [
+    ["Hardware, rtl/", [["rtl/lib/spi/spi_master.v", 226, 226], ["rtl/lib/spi/lis3dh_stub.v", 175, 175], ["rtl/darkspi.v", 158, 158], ["rtl/lib/spi/spi_master_bb.v", 89, 89], ["rtl/darksocv.v", 86, 409], ["rtl/darkio.v", 66, 264], ["rtl/config.vh", 11, 577]]],
+    ["Simulation, sim/", [["sim/Vdarksocv_gui.cpp", 172, 172], ["sim/cosim.mk", 69, 69], ["sim/Makefile", 39, 112]]],
+    ["Firmware, src/", [["src/spidemo/main.c", 462, 462], ["src/darklibc/include/io.h", 14, 122]]],
+    ["CI", [[".github/workflows/Linux.yml", 38, 40]]]
+  ];
+  var FMAX = 600;
+  var files = document.getElementById("files"), ftb = document.querySelector("#files-table tbody");
+  FILES.forEach(function (grp) {
+    files.appendChild(el("div", "grp", grp[0]));
+    grp[1].forEach(function (f) {
+      var row = el("div", "frow"); row.tabIndex = 0;
+      row.setAttribute("aria-label", f[0] + ": " + f[1] + " of " + f[2] + " lines");
+      var name = el("div", "fname"); name.appendChild(el("span", null, f[0])); name.appendChild(el("span", null, f[1] + " / " + f[2]));
+      var bar = el("div", "fbar"), trk = el("div", "trk"), fil = el("div", "fil");
+      trk.style.width = (f[2] / FMAX * 100) + "%"; fil.style.width = (f[1] / FMAX * 100) + "%";
+      if (f[1] < f[2]) fil.style.borderRadius = "0";
+      bar.appendChild(trk); bar.appendChild(fil);
+      row.appendChild(name); row.appendChild(bar); files.appendChild(row);
+      function show(px, py) {
+        showTip(function (box) {
+          box.appendChild(el("div", "h", f[0]));
+          var r1 = el("div", "row"), k = el("span", "k"); k.style.background = "var(--merged)";
+          r1.appendChild(k); r1.appendChild(el("b", null, f[1] + " lines")); r1.appendChild(el("span", null, "last changed by Nicolas"));
+          box.appendChild(r1);
+          box.appendChild(el("div", null, Math.round(f[1] / f[2] * 100) + "% of the file's " + f[2] + " lines"));
+        }, px, py);
+      }
+      row.addEventListener("pointermove", function (e) { show(e.clientX, e.clientY); });
+      row.addEventListener("pointerleave", hideTip);
+      row.addEventListener("focus", function () { var r = row.getBoundingClientRect(); show(r.left + r.width / 2, r.top + 20); });
+      row.addEventListener("blur", hideTip);
+      var tr = el("tr");
+      tr.appendChild(el("td", "mono", f[0]));
+      tr.appendChild(el("td", "num", String(f[1])));
+      tr.appendChild(el("td", "num", String(f[2])));
+      tr.appendChild(el("td", "num", Math.round(f[1] / f[2] * 100) + "%"));
+      ftb.appendChild(tr);
+    });
+  });
+  var fax = document.getElementById("faxis");
+  [0, 200, 400, 600].forEach(function (v) {
+    var t = el("span", null, v === 600 ? "600 lines" : String(v));
+    t.style.left = (v / FMAX * 100) + "%";
+    if (v === 600) t.style.transform = "translateX(-100%)";
+    fax.appendChild(t);
+  });
+
+  /* ---------- SPI waveform ---------- */
+  function drawWave() {
+    var svg = document.getElementById("wave");
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var U = 20, X0 = 70, T = 38, W = X0 + T * U + 14, H = 250;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    var X = function (t) { return X0 + t * U; };
+    var rows = { csn: 40, sck: 90, sdi: 140, sdo: 190 }, amp = 14;
+    var names = [["CS", "csn", "chip select, active low"], ["SPC", "sck", "clock"], ["SDI", "sdi", "master to sensor"], ["SDO", "sdo", "sensor to master"]];
+    names.forEach(function (nm) {
+      var t = s("text", { x: 4, y: rows[nm[1]] + 4, "class": "name" }, svg); t.textContent = nm[0];
+    });
+    for (var i = 0; i < 16; i++) s("line", { x1: X(4 + 2 * i), x2: X(4 + 2 * i), y1: 70, y2: 210, "class": "tick" }, svg);
+    function level(row, segs, cls) {
+      var d = "", yHi = rows[row] - amp, yLo = rows[row] + amp, prev = null;
+      segs.forEach(function (sg) {
+        var yv = sg[2] ? yHi : yLo;
+        if (prev === null) d += "M" + X(sg[0]) + "," + yv;
+        else if (prev !== yv) d += "L" + X(sg[0]) + "," + yv;
+        d += "L" + X(sg[1]) + "," + yv; prev = yv;
+      });
+      return s("path", { d: d, "class": "sig" + (cls ? " " + cls : "") }, svg);
+    }
+    level("csn", [[0, 2, 1], [2, 36, 0], [36, T, 1]]);
+    var ck = [[0, 3, 1]];
+    for (i = 0; i < 16; i++) { ck.push([3 + 2 * i, 4 + 2 * i, 0]); ck.push([4 + 2 * i, 5 + 2 * i, 1]); }
+    ck.push([35, T, 1]);
+    level("sck", ck);
+    var cmd = [1, 0, 0, 0, 1, 1, 1, 1], ans = [0, 0, 1, 1, 0, 0, 1, 1];
+    var sdi = [[0, 3, 1]];
+    cmd.forEach(function (b, k) { sdi.push([3 + 2 * k, 5 + 2 * k, b]); });
+    level("sdi", sdi.concat([[19, 19, 1]]));
+    s("rect", { x: X(19), y: rows.sdi - amp, width: X(35) - X(19), height: 2 * amp, "class": "dc" }, svg);
+    var dct = s("text", { x: (X(19) + X(35)) / 2, y: rows.sdi + 4, "text-anchor": "middle" }, svg); dct.textContent = "don't care";
+    level("sdi", [[35, T, 1]]);
+    s("line", { x1: X(0), x2: X(19), y1: rows.sdo, y2: rows.sdo, "class": "hiz" }, svg);
+    var sdo = [];
+    ans.forEach(function (b, k) { sdo.push([19 + 2 * k, 21 + 2 * k, b]); });
+    level("sdo", sdo, "ans");
+    s("line", { x1: X(35), x2: X(T), y1: rows.sdo, y2: rows.sdo, "class": "hiz" }, svg);
+    var cmdLab = ["RW", "MS", "0", "0", "1", "1", "1", "1"];
+    cmd.forEach(function (b, k) { var t = s("text", { x: X(4 + 2 * k), y: rows.sdi - amp - 6, "text-anchor": "middle" }, svg); t.textContent = cmdLab[k]; });
+    ans.forEach(function (b, k) { var t = s("text", { x: X(20 + 2 * k), y: rows.sdo - amp - 6, "text-anchor": "middle" }, svg); t.textContent = String(b); });
+    function brace(t0, t1, yb, label) {
+      s("path", { d: "M" + X(t0) + "," + (yb - 5) + "V" + yb + "H" + X(t1) + "V" + (yb - 5), "class": "brace" }, svg);
+      var t = s("text", { x: (X(t0) + X(t1)) / 2, y: yb + 14, "text-anchor": "middle" }, svg); t.textContent = label;
+    }
+    brace(3, 19, 222, "command 0x8F: read, register 0x0F");
+    brace(19, 35, 222, "answer 0x33");
+    var hz = s("text", { x: X(0.2), y: rows.sdo - 6 }, svg); hz.textContent = "released";
+    var ld = s("text", { x: X(3), y: 14 }, svg); ld.textContent = "16 cycles, data sampled on each rising clock edge";
+  }
+
+  drawWeekly();
+  drawWave();
+  var rt;
+  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(drawWeekly, 120); });
+})();
+</script>
+</body>
+</html>
